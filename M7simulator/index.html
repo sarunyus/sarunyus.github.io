@@ -1,0 +1,1026 @@
+<title>M7 M-Flow Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f6f6f3; --surface:#ffffff; --surface2:#efefeb; --ink:#181b22; --ink2:#51545d;
+  --muted:#8a8d95; --line:#e2e2dc; --line2:#d0d0c9;
+  --accent:#24418c; --accent-soft:#e8edf9; --accent-ink:#ffffff;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a;
+  --mem:#4a3aa7; --non:#e87ba4;
+  --good:#0ca30c; --good-text:#006300; --good-soft:#e4f4e4;
+  --bad:#d03b3b; --bad-text:#b02c2c; --bad-soft:#fbe9e9;
+  --warn:#c98500; --warn-soft:#fdf3dd;
+  --shadow:0 1px 3px rgba(20,22,30,.07),0 4px 14px rgba(20,22,30,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1013; --surface:#1a1b1f; --surface2:#232428; --ink:#f1f1ee; --ink2:#c0c1bb;
+    --muted:#8f9299; --line:#2b2c31; --line2:#3a3b41;
+    --accent:#6f8fd8; --accent-soft:#232c42; --accent-ink:#0f1013;
+    --c1:#3987e5; --c2:#d95926; --c3:#199e70;
+    --mem:#9085e9; --non:#d55181;
+    --good:#0ca30c; --good-text:#3ec43e; --good-soft:#17301a;
+    --bad:#e66767; --bad-text:#ef8686; --bad-soft:#3a1d1d;
+    --warn:#e0a41a; --warn-soft:#33290f;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1013; --surface:#1a1b1f; --surface2:#232428; --ink:#f1f1ee; --ink2:#c0c1bb;
+  --muted:#8f9299; --line:#2b2c31; --line2:#3a3b41;
+  --accent:#6f8fd8; --accent-soft:#232c42; --accent-ink:#0f1013;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70;
+  --mem:#9085e9; --non:#d55181;
+  --good:#0ca30c; --good-text:#3ec43e; --good-soft:#17301a;
+  --bad:#e66767; --bad-text:#ef8686; --bad-soft:#3a1d1d;
+  --warn:#e0a41a; --warn-soft:#33290f;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'IBM Plex Sans Thai','Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:14.5px;line-height:1.55;}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px 80px}
+header.top{padding:26px 0 10px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}
+header.top h1{font-size:1.45rem;font-weight:700;margin:0;letter-spacing:-.01em}
+header.top h1 .en{color:var(--accent);}
+header.top .sub{color:var(--ink2);font-size:.9rem}
+.verdict-bar{position:sticky;top:0;z-index:50;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--shadow);padding:10px 18px;display:flex;flex-wrap:wrap;gap:6px 26px;align-items:center;margin-bottom:18px}
+.verdict-bar .kpi{display:flex;flex-direction:column;min-width:110px}
+.verdict-bar .kpi .lb{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.verdict-bar .kpi .v{font-weight:700;font-size:1.06rem;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;font-weight:700;font-size:.92rem}
+.chip.good{background:var(--good-soft);color:var(--good-text)}
+.chip.bad{background:var(--bad-soft);color:var(--bad-text)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 20px}
+nav.tabs button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);
+  color:var(--ink2);padding:9px 18px;border-radius:10px;cursor:pointer}
+nav.tabs button:hover{border-color:var(--line2);color:var(--ink)}
+nav.tabs button.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+nav.tabs button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.page{display:none}.page.show{display:block}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 4px;font-size:1.0rem;font-weight:700}
+.card h3 .num{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:7px;
+  font-size:.72rem;font-weight:700;padding:2px 8px;margin-right:8px;vertical-align:2px}
+.card .hint{color:var(--ink2);font-size:.82rem;margin:0 0 12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 18px;box-shadow:var(--shadow)}
+.tile .lb{font-size:.75rem;color:var(--muted);font-weight:600}
+.tile .v{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tile .s{font-size:.78rem;color:var(--ink2)}
+.tile.good .v{color:var(--good-text)} .tile.bad .v{color:var(--bad-text)}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+label.f{font-size:.85rem;font-weight:600;color:var(--ink2)}
+input[type=number],select{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line2);
+  border-radius:9px;padding:7px 10px;width:130px;font-variant-numeric:tabular-nums}
+select{width:auto}
+input[type=range]{accent-color:var(--accent);flex:1;min-width:120px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{font:inherit;font-size:.85rem;font-weight:600;border:1px solid var(--line2);background:var(--surface2);
+  color:var(--ink2);border-radius:8px;padding:5px 12px;cursor:pointer}
+.chips button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+.seg button{font:inherit;font-size:.85rem;font-weight:600;background:var(--surface);color:var(--ink2);border:none;padding:6px 14px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--line);font-size:.85rem}
+th{color:var(--muted);font-weight:600;font-size:.76rem}
+th:first-child,td:first-child{text-align:left}
+tr.tot td{font-weight:700;border-top:2px solid var(--line2)}
+.tbl-scroll{overflow-x:auto}
+.bar-list .bl-row{display:grid;grid-template-columns:minmax(120px,180px) 1fr 90px;gap:10px;align-items:center;padding:3px 0}
+.bar-list .bl-lab{font-size:.83rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-list .bl-track{height:14px;border-radius:4px;background:var(--surface2);overflow:hidden}
+.bar-list .bl-fill{height:100%;border-radius:0 4px 4px 0}
+.bar-list .bl-val{font-size:.8rem;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stack{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--surface2)}
+.stack>div{height:100%}.stack>div+div{border-left:2px solid var(--surface)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:.8rem;color:var(--ink2)}
+.legend .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.note{background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:10px 14px;font-size:.84rem;color:var(--ink2);margin-top:12px}
+.note.warn{border-left-color:var(--warn)}
+.behav{display:grid;grid-template-columns:110px 1fr 54px 1fr 54px;gap:6px 10px;align-items:center;font-size:.83rem}
+.behav7{display:grid;grid-template-columns:104px 108px 1fr 52px 1fr 52px;gap:6px 10px;align-items:center;font-size:.83rem}
+.behav10{display:grid;grid-template-columns:96px 70px 1fr 46px 70px 1fr 46px;gap:6px 10px;align-items:center;font-size:.83rem}
+.behav7 .txnc,.behav10 .txnc{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.behav7 .zero,.behav10 .zero{opacity:.38}
+.behav10 .hd{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.behav10 .bandlb{font-weight:600;color:var(--ink2);white-space:nowrap}
+.behav10 .pv{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.behav .hd,.behav7 .hd{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.behav .bandlb,.behav7 .bandlb{font-weight:600;color:var(--ink2);white-space:nowrap}
+.behav .pv,.behav7 .pv{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.matrix input{width:100%;min-width:52px;font:inherit;font-size:.78rem;text-align:right;background:transparent;
+  color:var(--ink);border:1px solid transparent;border-radius:5px;padding:3px 4px;font-variant-numeric:tabular-nums}
+.matrix input:hover{border-color:var(--line2)}
+.matrix input:focus{border-color:var(--accent);background:var(--surface)}
+.matrix th{font-size:.7rem}
+.matrix td{padding:1px 2px}
+.btn{font:inherit;font-weight:600;border:1px solid var(--line2);background:var(--surface);color:var(--ink);
+  border-radius:9px;padding:7px 16px;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pair-row{grid-column:1/-1;display:grid;grid-template-columns:1.9fr 1fr;gap:16px;align-items:start}
+@media (max-width:860px){.pair-row{grid-template-columns:1fr}}
+@media (max-width:760px){.two-col{grid-template-columns:1fr}.behav{grid-template-columns:90px 1fr 48px 1fr 48px}
+  .behav7{grid-template-columns:86px 76px 1fr 46px 1fr 46px;font-size:.78rem}
+  .behav10{grid-template-columns:78px 58px 1fr 42px 58px 1fr 42px;font-size:.76rem}}
+.io-list{list-style:none;margin:0;padding:0}
+.io-list li{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.io-list li:last-child{border-bottom:none}
+.io-list .amt{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.io-list .amt.plus{color:var(--good-text)}.io-list .amt.minus{color:var(--bad-text)}
+.io-list li.sum{border-top:2px solid var(--line2);font-weight:700}
+.muted{color:var(--muted)} .small{font-size:.8rem}
+.sec-title{font-size:1.05rem;font-weight:700;margin:26px 0 12px;display:flex;align-items:center;gap:10px}
+.sec-title::after{content:"";flex:1;height:1px;background:var(--line)}
+@media (prefers-reduced-motion:no-preference){
+  .bar-list .bl-fill{transition:width .35s ease}
+}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <h1><span class="en">M7 M-Flow</span> Feasibility Simulator</h1>
+  <span class="sub">เครื่องมือจำลองความคุ้มค่าการเข้าบริหารจัดการระบบ M-Flow บนทางหลวงพิเศษหมายเลข 7</span>
+</header>
+
+<div class="verdict-bar" id="verdictBar">
+  <span class="chip" id="verdictChip">—</span>
+  <div class="kpi"><span class="lb">กำไร/ขาดทุนสุทธิ บริษัทฯ</span><span class="v" id="vbNet">—</span></div>
+  <div class="kpi"><span class="lb">รายรับบริษัทฯ</span><span class="v" id="vbRev">—</span></div>
+  <div class="kpi"><span class="lb">ชดเชยที่เรียกคืนไม่ได้</span><span class="v" id="vbUnrec">—</span></div>
+  <div class="kpi"><span class="lb">ระยะเวลาจำลอง</span><span class="v" id="vbDays">—</span></div>
+  <div class="kpi"><span class="lb">รายการ M-Flow รวม</span><span class="v" id="vbTxn">—</span></div>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button data-page="pgInput" class="active">1 · ตั้งค่าสถานการณ์</button>
+  <button data-page="pgDoh">2 · ผลลัพธ์ฝั่งกรมทางหลวง</button>
+  <button data-page="pgCo">3 · ผลลัพธ์ฝั่งบริษัทฯ</button>
+  <button data-page="pgData">4 · ข้อมูลพื้นฐาน (O-D)</button>
+</nav>
+
+<!-- ============ PAGE 1 : INPUTS ============ -->
+<section class="page show" id="pgInput">
+<div class="grid g2">
+
+  <div class="card">
+    <h3><span class="num">1.1</span>ระยะเวลาจำลอง (วัน)</h3>
+    <p class="hint">เลือกจำนวนวันเพื่อดูผลตอบแทนระยะสั้น-ระยะยาว</p>
+    <div class="row">
+      <div class="chips" id="dayChips">
+        <button data-v="1">1 วัน</button><button data-v="7">7 วัน</button>
+        <button data-v="30" class="on">30 วัน</button><button data-v="90">90 วัน</button>
+        <button data-v="365">365 วัน</button>
+      </div>
+      <input type="number" id="inDays" min="1" step="1" value="30" aria-label="จำนวนวัน">
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">1.2</span>สัดส่วนรถเข้าช่อง M-Flow (%)</h3>
+    <p class="hint">กำหนดแยกตาม Class — ฐานปริมาณอ้างอิงค่าเฉลี่ยรายวันจาก sheet 'รายวัน' (ก.ค. 2026)</p>
+    <div class="row" style="margin-bottom:6px">
+      <label class="f" style="width:150px"><span class="legend"><span class="sw" style="background:var(--c1)"></span>Class 1 (4 ล้อ)</span></label>
+      <input type="range" id="mf1" min="0" max="100" value="40"><span class="pv" id="mf1v" style="width:44px;text-align:right;font-weight:600">40%</span>
+    </div>
+    <div class="row" style="margin-bottom:6px">
+      <label class="f" style="width:150px"><span class="legend"><span class="sw" style="background:var(--c2)"></span>Class 2 (6 ล้อ)</span></label>
+      <input type="range" id="mf2" min="0" max="100" value="40"><span class="pv" id="mf2v" style="width:44px;text-align:right;font-weight:600">40%</span>
+    </div>
+    <div class="row">
+      <label class="f" style="width:150px"><span class="legend"><span class="sw" style="background:var(--c3)"></span>Class 3 (&gt;6 ล้อ)</span></label>
+      <input type="range" id="mf3" min="0" max="100" value="40"><span class="pv" id="mf3v" style="width:44px;text-align:right;font-weight:600">40%</span>
+    </div>
+    <div class="note" id="mfNote"></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">1.3</span>สัดส่วนสมาชิก : ไม่ใช่สมาชิก</h3>
+    <p class="hint">จากรายการที่เข้า M-Flow — ใช้กำหนดเงื่อนไขกำหนดชำระและค่าปรับที่ต่างกัน</p>
+    <div class="row">
+      <input type="range" id="memPct" min="0" max="100" value="30">
+      <span style="font-weight:700;font-variant-numeric:tabular-nums" id="memPctV">สมาชิก 30% · ไม่ใช่สมาชิก 70%</span>
+    </div>
+    <div class="stack" style="margin-top:10px">
+      <div id="memStackM" style="background:var(--mem);width:30%"></div>
+      <div id="memStackN" style="background:var(--non);width:70%"></div>
+    </div>
+    <div class="legend"><span><span class="sw" style="background:var(--mem)"></span>สมาชิก (Member)</span>
+    <span><span class="sw" style="background:var(--non)"></span>ไม่ใช่สมาชิก (Non-member)</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">1.4</span>ค่าบริหารจัดการ Transaction</h3>
+    <p class="hint">รายรับที่กรมทางหลวงจ่ายให้บริษัทฯ ต่อรายการผ่านทาง</p>
+    <div class="row"><input type="number" id="txnFee" min="0" step="0.1" value="2.5"><span class="f">บาท / รายการ</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">1.5</span>ค่าเช่าใช้ระบบ (System Usage Fee)</h3>
+    <p class="hint">อัตราคงที่ต่อ 30 วัน — ระบบจะเฉลี่ยตามจำนวนวันที่เลือกในข้อ 1.1</p>
+    <div class="row"><input type="number" id="rent" min="0" step="100000" value="2100000" style="width:170px"><span class="f">บาท / 30 วัน</span></div>
+    <p class="small muted" id="rentPerDay"></p>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">1.6</span>กำหนดชำระ & ค่าปรับ</h3>
+    <p class="hint">เกินกำหนดชำระจะเกิดค่าปรับเป็นจำนวนเท่าของค่าผ่านทาง (ค่าปรับเป็นรายได้ของกรมฯ) — กำหนดชำระของแต่ละสถานะคือ "วันเริ่มชดเชยรายได้" ของสถานะนั้นด้วย (ดูข้อ 1.8)</p>
+    <div class="two-col">
+      <div>
+        <label class="f">สมาชิก — ชำระภายใน</label><br>
+        <select id="dueM"><option>7</option><option>15</option><option>23</option><option>30</option></select> วัน<br><br>
+        <label class="f">ค่าปรับสมาชิก</label><br>
+        <select id="penM"><option>2</option><option>5</option><option selected>10</option></select> เท่า
+      </div>
+      <div>
+        <label class="f">ไม่ใช่สมาชิก — ชำระภายใน</label><br>
+        <select id="dueN"><option>7</option><option>15</option><option>23</option><option>30</option></select> วัน<br><br>
+        <label class="f">ค่าปรับไม่ใช่สมาชิก</label><br>
+        <select id="penN"><option>2</option><option>5</option><option selected>10</option></select> เท่า
+      </div>
+    </div>
+    <div class="note">ผลของการตั้งค่าในข้อนี้: <b>จำนวนเท่าของค่าปรับ</b> → เป็นรายได้ค่าปรับของกรมฯ (หน้า 2) ไม่ใช่รายได้บริษัทฯ จึงไม่กระทบกำไรบริษัทฯ · <b>กำหนดชำระ</b> → เป็นเส้นแบ่ง "ตรงกำหนด/ค้างชำระ" ที่ข้อ 1.7 อ้างอิง หากขยายกำหนดแล้วเชื่อว่าคนชำระตรงเวลามากขึ้น ให้ปรับ % ที่ข้อ 1.7 เอง · ส่วน <b>วันที่เริ่มจ่ายชดเชย</b> กำหนดแยกอิสระที่ข้อ 1.8</div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1">
+    <h3><span class="num">1.7</span>พฤติกรรมการชำระเงิน — % ชำระตรงกำหนด แยกตาม Class และช่วงอัตราค่าผ่านทาง</h3>
+    <p class="hint">ส่วนที่เหลือจาก 100% คือรายการ "ค้างชำระ" ซึ่งบริษัทฯ ต้องชดเชยรายได้ให้กรมฯ ตามวันในข้อ 1.8 — คอลัมน์ "รายการ M-Flow" คือปริมาณจริงที่ตกอยู่ในช่วงอัตรานั้น คำนวณจากปริมาณจราจรรายคู่ O-D และอัตราค่าผ่านทางของ Class นั้นในหน้า 4</p>
+    <div class="row" style="margin-bottom:10px">
+      <div class="seg" id="behavClassSeg">
+        <button data-c="0" class="on">Class 1 (4 ล้อ)</button><button data-c="1">Class 2 (6 ล้อ)</button><button data-c="2">Class 3 (&gt;6 ล้อ)</button>
+      </div>
+      <span class="small muted" id="behavClassSum"></span>
+    </div>
+    <div class="behav7" id="behavGrid">
+      <span class="hd">ช่วงค่าผ่านทาง</span><span class="hd" style="text-align:right">รายการ M-Flow</span><span class="hd" style="grid-column:span 2;color:var(--mem)">สมาชิก — ตรงกำหนด</span><span class="hd" style="grid-column:span 2;color:var(--non)">ไม่ใช่สมาชิก — ตรงกำหนด</span>
+    </div>
+    <div class="note">ช่วงอัตราที่ไม่มีรายการของ Class นั้น (แสดงเป็น 0) จะถูกหรี่ลง เพราะไม่มีผลต่อการคำนวณ — ตั้งค่าไว้เผื่อการปรับอัตราในอนาคตได้ · แต่ละ Class เก็บค่าของตัวเองแยกกัน</div>
+  </div>
+
+  <div class="card" style="grid-column:1/-1">
+    <h3><span class="num">1.8</span>กำหนดวันชดเชยรายได้ให้กรมฯ</h3>
+    <p class="hint">เลือกเองได้อิสระ ไม่ผูกกับข้อ 1.6 — ผ่านทางแล้วครบกี่วัน หากยังไม่จ่าย จึงจะชดเชยรายได้ให้กรมฯ (เฉพาะค่าผ่านทาง ไม่รวมค่าปรับ) เช่น ไม่ใช่สมาชิก กำหนดชำระ 7 วัน แต่ชดเชยเมื่อครบ 23 วัน ก็สามารถทำได้</p>
+    <div class="row" style="gap:10px 32px">
+      <span class="row" style="gap:8px"><label class="f" style="color:var(--mem)">สมาชิก — ชดเชยเมื่อครบ</label>
+        <select id="compDayM"><option selected>7</option><option>15</option><option>23</option><option>30</option></select><span class="f">วันหลังผ่านทาง</span></span>
+      <span class="row" style="gap:8px"><label class="f" style="color:var(--non)">ไม่ใช่สมาชิก — ชดเชยเมื่อครบ</label>
+        <select id="compDayN"><option selected>7</option><option>15</option><option>23</option><option>30</option></select><span class="f">วันหลังผ่านทาง</span></span>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)" id="gapBlock">
+      <label class="f">เมื่อถึงวันชดเชย มีผู้ค้างชำระจ่ายไปเองแล้วกี่ %</label>
+      <p class="small muted" style="margin:4px 0 8px">บริษัทฯ รอจนถึงวันชดเชย แล้วจึงดูว่า <b>เหลือรายการค้างชำระเท่าไหร่</b> จึงนำเฉพาะรายการที่เหลือไปชดเชย — รายการที่จ่ายไปก่อนหน้านั้นไม่ต้องชดเชย แต่ก็ <b>ไม่ได้ค่าติดตามทวงถาม</b> (ข้อ 1.10 เบิกได้เฉพาะรายการที่ชดเชยไปแล้ว) ตั้ง 0% หากถือว่าไม่มีใครจ่ายในช่วงนี้</p>
+      <div class="row" style="margin-bottom:8px;flex-wrap:nowrap">
+        <label class="f" style="width:110px;flex:none;color:var(--mem)">สมาชิก</label>
+        <input type="range" id="gapM" min="0" max="100" value="0"><span class="pv" id="gapMv" style="width:240px;flex:none;text-align:right;font-weight:600">0%</span>
+      </div>
+      <div class="row" style="flex-wrap:nowrap">
+        <label class="f" style="width:110px;flex:none;color:var(--non)">ไม่ใช่สมาชิก</label>
+        <input type="range" id="gapN" min="0" max="100" value="0"><span class="pv" id="gapNv" style="width:240px;flex:none;text-align:right;font-weight:600">0%</span>
+      </div>
+    </div>
+    <div class="note" id="compNote"></div>
+  </div>
+
+  <div class="pair-row">
+  <div class="card">
+    <h3><span class="num">1.9</span>อัตราการกลับมาชำระ หลังบริษัทฯ ชดเชยแล้ว (%)</h3>
+    <p class="hint">% ของรายการที่ชดเชยไปแล้ว ที่ผู้ใช้ทางจะกลับมาชำระ (ค่าผ่านทาง + ค่าปรับ ไม่ว่าจะช้าเพียงใด) — ประวัติที่ผ่านมาเฉลี่ย ~40% ของยอดชดเชย บริษัทฯ เบิกค่าผ่านทางคืนได้ และได้ค่าติดตาม (ข้อ 1.10) สำหรับรายการไม่ใช่สมาชิก · กำหนดแยกตาม Class ได้ เพราะรถแต่ละประเภทมีพฤติกรรมการกลับมาชำระต่างกัน</p>
+    <div class="row" style="margin-bottom:10px">
+      <div class="seg" id="repayClassSeg">
+        <button data-c="0" class="on">Class 1 (4 ล้อ)</button><button data-c="1">Class 2 (6 ล้อ)</button><button data-c="2">Class 3 (&gt;6 ล้อ)</button>
+      </div>
+    </div>
+    <div class="small muted" id="repayClassSum" style="margin-bottom:8px"></div>
+    <div class="behav10" id="repayGrid">
+      <span class="hd">ช่วงค่าผ่านทาง</span>
+      <span class="hd" style="grid-column:span 3;color:var(--mem)">สมาชิก — ชดเชย / % กลับมาชำระ</span>
+      <span class="hd" style="grid-column:span 3;color:var(--non)">ไม่ใช่สมาชิก — ชดเชย / % กลับมาชำระ</span>
+    </div>
+    <div class="note">เฉพาะ <b>"ไม่ใช่สมาชิก"</b> ที่กลับมาชำระเท่านั้นที่เบิกค่าติดตามทวงถาม (ข้อ 1.10) ได้ — สมาชิกที่กลับมาชำระ บริษัทฯ เบิกคืนได้เฉพาะค่าผ่านทาง ไม่ได้ค่าติดตาม</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">1.10</span>ค่าติดตามทวงถาม (Collection Fee)</h3>
+    <p class="hint">เบิกได้เฉพาะรายการ "ไม่ใช่สมาชิก" ที่บริษัทฯ ชดเชยไปแล้ว และผู้ใช้ทางกลับมาชำระค่าผ่านทาง+ค่าปรับ</p>
+    <div class="row"><input type="number" id="collectFee" min="0" step="10" value="300"><span class="f">บาท / รายการ</span>
+      <div class="chips" id="collectPresets">
+        <button data-v="200">200</button><button data-v="300">300</button><button data-v="400">400</button><button data-v="500">500</button>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+      <label class="f">เบิกได้จริงกี่ % จากยอดที่ควรจะเบิกได้ทั้งหมด</label>
+      <p class="small muted" style="margin:4px 0 8px">บางรายการถูกยกเลิกสิทธิ์เบิก เช่น ผู้ใช้ทางมาโต้แย้งรายการผ่านทางแล้วได้รับการยกเว้นค่าปรับ — ตั้ง 100% หมายถึงไม่มีรายการใดถูกโต้แย้ง ทุกรายการชำระค่าผ่านทางพร้อมค่าปรับครบ</p>
+      <div class="row" style="flex-wrap:nowrap">
+        <input type="range" id="claimPct" min="0" max="100" value="100"><span class="pv" id="claimPctV" style="width:52px;flex:none;text-align:right;font-weight:700">100%</span>
+      </div>
+    </div>
+    <div class="note" id="collectNote"></div>
+  </div>
+  </div>
+
+</div>
+<div class="row" style="margin-top:18px;justify-content:space-between">
+  <button class="btn" id="btnReset">รีเซ็ตค่าเริ่มต้นทั้งหมด</button>
+  <button class="btn primary" id="btnGo">ดูผลการจำลอง →</button>
+</div>
+</section>
+
+<!-- ============ PAGE 2 : DOH RESULTS ============ -->
+<section class="page" id="pgDoh">
+  <div class="grid g3" id="dohTiles"></div>
+  <div class="sec-title">โครงสร้างรายรับกรมทางหลวง</div>
+  <div class="grid g2">
+    <div class="card"><h3>ค่าผ่านทาง vs ค่าปรับ</h3><p class="hint">กรมฯ ได้ค่าผ่านทางครบ 100% (ผู้ใช้จ่ายเอง + บริษัทฯ ชดเชย) — ค่าปรับเกิดจากรายการค้างที่กลับมาชำระ</p>
+      <div class="stack" id="dohTollFine"></div><div class="legend" id="dohTollFineLg"></div><div id="dohTollFineTbl" style="margin-top:10px"></div></div>
+    <div class="card"><h3>รายรับค่าผ่านทางแยกตาม Class</h3><p class="hint">อันดับแหล่งรายได้สูงสุดตามประเภทรถ</p><div class="bar-list" id="dohByClass"></div></div>
+    <div class="card"><h3>สัดส่วนรายรับ สมาชิก : ไม่ใช่สมาชิก</h3><p class="hint">รวมค่าผ่านทาง + ค่าปรับ</p>
+      <div class="stack" id="dohMemStack"></div><div class="legend" id="dohMemLg"></div><div id="dohMemTbl" style="margin-top:10px"></div></div>
+    <div class="card"><h3>รายจ่ายของกรมทางหลวง</h3><p class="hint">จ่ายให้บริษัทฯ ผู้บริหารระบบ</p><ul class="io-list" id="dohExpList"></ul></div>
+  </div>
+  <div class="sec-title">อันดับรายได้ราย O-D (ค่าผ่านทางรวมทุก Class)</div>
+  <div class="grid g2">
+    <div class="card"><h3>สูงสุด 10 อันดับ</h3><div class="bar-list" id="odTop"></div></div>
+    <div class="card"><h3>ต่ำสุด 10 อันดับ</h3><div class="bar-list" id="odBottom"></div></div>
+  </div>
+</section>
+
+<!-- ============ PAGE 3 : COMPANY RESULTS ============ -->
+<section class="page" id="pgCo">
+  <div class="grid g3" id="coTiles"></div>
+  <div class="sec-title">งบกำไร-ขาดทุนของบริษัทฯ</div>
+  <div class="grid g2">
+    <div class="card"><h3>รายรับ (Revenue)</h3><ul class="io-list" id="coRevList"></ul></div>
+    <div class="card"><h3>รายจ่าย & การเรียกคืน (Compensation)</h3><ul class="io-list" id="coExpList"></ul>
+      <div class="note warn" id="cashNote"></div></div>
+  </div>
+  <div class="sec-title">รายละเอียดความเสี่ยง</div>
+  <div class="grid g2">
+    <div class="card"><h3>รายการค้างชำระ แยกตาม Class</h3><p class="hint">รายการที่ไม่ชำระภายในกำหนด → บริษัทฯ ต้องชดเชย</p><div class="bar-list" id="coLateByClass"></div></div>
+    <div class="card"><h3>โครงสร้างรายรับบริษัทฯ</h3><div class="bar-list" id="coRevBars"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>กระแสเงินสด — ภาระสำรองจ่ายเงินชดเชยสะสม</h3>
+    <p class="hint">กำหนดชำระในข้อ 1.6 กำหนด "วันแรกที่ต้องควักเงินจ่าย" ของแต่ละสถานะ ยิ่งกำหนดชำระยาว ภาระเงินสดยิ่งเลื่อนออกไป (ยอดรวมเท่าเดิม)</p>
+    <div class="grid g3" id="cashTiles" style="margin-bottom:14px"></div>
+    <div class="tbl-scroll"><div id="cashChart"></div></div>
+    <div class="legend" id="cashLegend"></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>ตารางชดเชย-เรียกคืน แยกตามช่วงอัตราค่าผ่านทาง</h3>
+    <div class="tbl-scroll"><table id="bandTable"></table></div></div>
+  <div class="card" style="margin-top:16px" id="conclusionCard"></div>
+</section>
+
+<!-- ============ PAGE 4 : BASE DATA ============ -->
+<section class="page" id="pgData">
+  <div class="card">
+    <h3>ข้อมูลพื้นฐานจากไฟล์ M7_OD(MTC+ETC).xlsx</h3>
+    <p class="hint">แก้ไขตัวเลขในตารางได้โดยตรง — ผลการจำลองจะคำนวณใหม่ทันที ข้อมูลที่แก้จะถูกจำไว้ในเบราว์เซอร์ของคุณ</p>
+    <div class="row" style="margin-bottom:12px">
+      <div class="seg" id="dataClassSeg">
+        <button data-c="0" class="on">Class 1</button><button data-c="1">Class 2</button><button data-c="2">Class 3</button>
+      </div>
+      <button class="btn" id="btnDataReset">คืนค่าตามไฟล์ต้นฉบับ</button>
+      <span class="small muted" id="dataSum"></span>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <span class="small" id="dataStatus"></span>
+    </div>
+    <div class="two-col" style="grid-template-columns:1fr">
+      <div>
+        <h3 style="font-size:.92rem">อัตราค่าผ่านทาง (บาท/เที่ยว) — Origin แถว × Destination คอลัมน์</h3>
+        <div class="tbl-scroll matrix"><table id="tollMatrix"></table></div>
+      </div>
+      <div style="margin-top:16px">
+        <h3 style="font-size:.92rem">ปริมาณจราจรเฉลี่ยรายวัน (รายการ/วัน ทุกช่องทาง MTC+ETC)</h3>
+        <div class="tbl-scroll matrix"><table id="volMatrix"></table></div>
+      </div>
+    </div>
+    <div class="note">ที่มาข้อมูล: ปริมาณจราจรเฉลี่ยรายวันทั้ง 3 Class มาจากไฟล์ <b>M7_ODMTCETC_Jul2026.xlsx</b> sheet '<b>รายวัน</b>' (ข้อมูลเดือน ก.ค. 2026 ตรวจสอบแล้วเท่ากับ sheet 'กรกฎาคม' ÷ 31 วันพอดี) · อัตราค่าผ่านทางมาจากไฟล์ M7_OD(MTC+ETC).xlsx sheet 'Toll Fee'</div>
+  </div>
+</section>
+</div>
+
+<script>
+const BASE = {"ver": "jul2026-13941f6444", "stations": ["ลาดกระบัง", "บางบ่อ", "บางปะกง", "พนัสนิคม", "บ้านบึง", "บางพระ", "หนองขาม", "โป่ง", "พัทยา", "ห้วยใหญ่", "เขาชีโอน", "อู่ตะเภา"], "toll": [[[0, 25, 30, 45, 55, 60, 80, 100, 105, 115, 125, 130], [25, 0, 10, 25, 35, 40, 60, 80, 85, 95, 105, 110], [30, 10, 0, 15, 25, 30, 50, 70, 75, 85, 95, 100], [45, 25, 15, 0, 10, 10, 30, 50, 55, 65, 75, 80], [55, 35, 25, 10, 0, 10, 25, 45, 45, 55, 70, 75], [60, 40, 30, 10, 10, 0, 20, 40, 40, 50, 60, 70], [80, 60, 50, 30, 25, 20, 0, 15, 20, 30, 40, 45], [100, 80, 70, 50, 45, 40, 15, 0, 10, 10, 20, 30], [105, 85, 75, 55, 45, 40, 20, 10, 0, 15, 25, 30], [115, 95, 85, 65, 55, 50, 30, 10, 15, 0, 10, 15], [125, 105, 95, 75, 70, 60, 40, 20, 25, 10, 0, 10], [130, 110, 100, 80, 75, 70, 45, 30, 30, 15, 10, 0]], [[0, 45, 45, 75, 90, 100, 130, 160, 170, 185, 200, 210], [45, 0, 15, 45, 55, 65, 100, 130, 135, 150, 170, 180], [45, 15, 0, 25, 40, 50, 80, 115, 120, 135, 150, 160], [75, 45, 25, 0, 15, 20, 50, 85, 90, 105, 120, 130], [90, 55, 40, 15, 0, 15, 40, 70, 75, 95, 110, 120], [100, 65, 50, 20, 15, 0, 30, 60, 65, 85, 100, 110], [130, 100, 80, 50, 40, 30, 0, 30, 35, 50, 65, 75], [160, 130, 115, 85, 70, 60, 30, 0, 15, 20, 35, 45], [170, 135, 120, 90, 75, 65, 35, 15, 0, 20, 40, 50], [185, 150, 135, 105, 95, 85, 50, 20, 20, 0, 20, 25], [200, 170, 150, 120, 110, 100, 65, 35, 40, 20, 0, 15], [210, 180, 160, 130, 120, 110, 75, 45, 50, 25, 15, 0]], [[0, 60, 70, 110, 130, 140, 190, 235, 245, 265, 290, 305], [60, 0, 20, 65, 80, 95, 145, 190, 195, 220, 245, 260], [70, 20, 0, 40, 55, 70, 120, 165, 170, 195, 220, 235], [110, 65, 40, 0, 20, 30, 75, 120, 130, 150, 175, 190], [130, 80, 55, 20, 0, 20, 60, 105, 110, 135, 160, 175], [140, 95, 70, 30, 20, 0, 45, 90, 100, 120, 145, 160], [190, 145, 120, 75, 60, 45, 0, 40, 50, 70, 100, 110], [235, 190, 165, 120, 105, 90, 40, 0, 20, 30, 55, 65], [245, 195, 170, 130, 110, 100, 50, 20, 0, 35, 60, 75], [265, 220, 195, 150, 135, 120, 70, 30, 35, 0, 25, 35], [290, 245, 220, 175, 160, 145, 100, 55, 60, 25, 0, 20], [305, 260, 235, 190, 175, 160, 110, 65, 75, 35, 20, 0]]], "vol": [[[0.0, 2797.29, 4745.94, 4889.29, 7219.39, 7050.58, 5595.84, 5414.52, 7789.71, 1532.1, 755.35, 684.55], [2573.19, 42.55, 4454.06, 1406.26, 1542.58, 805.35, 1228.81, 899.16, 658.16, 214.52, 139.55, 119.26], [4552.94, 4967.94, 0.0, 1741.55, 1291.42, 2397.32, 1396.52, 786.23, 832.19, 210.35, 115.39, 100.74], [4215.32, 1359.87, 1448.45, 0.0, 1096.32, 3803.45, 1578.97, 506.16, 475.06, 102.16, 54.42, 51.19], [6919.81, 1575.13, 952.84, 1690.26, 0.0, 2910.29, 619.23, 165.94, 282.45, 48.23, 17.42, 15.71], [7577.29, 1081.45, 2232.97, 4750.74, 4098.55, 0.0, 5961.97, 3354.1, 3362.55, 887.42, 499.13, 336.26], [5397.87, 1264.84, 1213.35, 1628.58, 695.74, 6186.13, 0.0, 2207.48, 2394.48, 631.58, 334.29, 302.94], [5690.32, 920.39, 716.77, 547.84, 240.84, 3638.9, 2135.58, 0.0, 6961.19, 929.77, 232.42, 220.1], [7477.32, 645.19, 690.52, 445.97, 341.58, 3191.97, 2236.55, 7419.35, 0.0, 878.29, 665.45, 642.52], [1442.55, 208.35, 163.0, 99.74, 68.32, 916.16, 628.61, 948.13, 862.26, 0.0, 329.61, 610.45], [774.23, 141.42, 97.55, 57.58, 29.97, 531.0, 326.32, 210.84, 645.97, 265.03, 0.0, 325.68], [685.84, 125.94, 87.16, 52.06, 23.45, 346.71, 305.74, 273.65, 557.81, 541.35, 321.68, 0.0]], [[0.0, 73.81, 69.48, 76.16, 125.13, 59.97, 93.68, 72.74, 104.87, 17.26, 8.52, 2.9], [62.55, 0.81, 102.77, 28.81, 35.39, 9.06, 22.19, 14.55, 5.06, 1.58, 0.55, 0.77], [59.06, 133.35, 0.0, 37.9, 30.29, 39.06, 34.03, 8.84, 6.52, 1.29, 0.52, 0.45], [49.35, 20.29, 28.74, 0.0, 24.23, 39.52, 30.29, 4.32, 1.97, 0.29, 0.1, 0.13], [112.71, 36.68, 17.55, 29.48, 0.0, 32.71, 14.19, 1.77, 3.84, 0.84, 0.06, 0.0], [46.9, 6.03, 22.65, 49.65, 40.97, 0.0, 147.65, 63.42, 29.16, 6.58, 3.61, 2.35], [62.39, 16.42, 18.03, 32.97, 13.77, 117.61, 0.0, 14.55, 16.81, 4.26, 1.32, 0.87], [67.03, 12.97, 9.35, 7.42, 2.58, 59.13, 17.94, 0.0, 53.87, 8.35, 0.97, 0.48], [100.06, 5.84, 5.26, 2.58, 2.68, 38.52, 14.13, 77.65, 0.0, 6.26, 3.52, 1.55], [11.77, 1.48, 0.9, 0.29, 0.35, 14.77, 3.61, 10.94, 4.55, 0.0, 1.87, 3.23], [7.23, 0.58, 0.19, 0.23, 0.13, 2.84, 1.06, 1.16, 3.39, 2.61, 0.0, 1.26], [2.35, 0.61, 0.65, 0.32, 0.06, 2.97, 0.77, 0.97, 2.23, 3.42, 1.39, 0.0]], [[0.0, 962.58, 513.94, 346.55, 884.35, 828.1, 1614.48, 511.52, 188.0, 35.84, 30.39, 13.42], [1167.65, 10.52, 908.03, 102.16, 273.26, 92.94, 332.03, 136.42, 13.81, 3.16, 3.81, 4.52], [673.32, 872.87, 0.0, 184.52, 258.32, 540.58, 886.68, 164.42, 40.19, 8.48, 4.29, 6.19], [335.94, 91.0, 155.0, 0.0, 116.19, 255.19, 345.13, 52.52, 4.35, 1.48, 0.52, 1.52], [865.1, 226.45, 172.84, 209.71, 0.0, 176.55, 70.84, 9.74, 9.84, 3.13, 0.19, 0.06], [711.29, 49.97, 338.94, 330.45, 221.39, 0.0, 2260.39, 693.0, 96.16, 13.81, 11.81, 9.58], [1525.68, 211.9, 610.29, 421.16, 90.94, 2266.29, 0.0, 177.42, 76.94, 25.71, 10.32, 11.39], [560.0, 103.48, 137.32, 81.94, 13.19, 774.45, 204.16, 0.0, 126.45, 24.45, 3.45, 3.97], [208.94, 12.9, 27.68, 4.77, 7.71, 157.71, 55.35, 237.87, 0.0, 12.77, 2.23, 5.45], [26.16, 3.26, 6.55, 1.06, 1.06, 30.26, 20.39, 29.55, 10.13, 0.0, 1.9, 25.81], [26.58, 2.74, 3.39, 0.77, 0.29, 8.74, 5.29, 3.68, 3.45, 1.65, 0.0, 5.71], [13.9, 3.71, 7.48, 0.97, 0.23, 9.45, 14.39, 5.13, 6.35, 23.87, 4.16, 0.0]]]};
+const BANDS = [[1,50],[51,100],[101,150],[151,200],[201,300],[301,400],[401,500],[501,Infinity]];
+const BAND_LB = ["1–50 บาท","51–100 บาท","101–150 บาท","151–200 บาท","201–300 บาท","301–400 บาท","401–500 บาท","มากกว่า 500 บาท"];
+const CLASS_LB = ["Class 1 (4 ล้อ)","Class 2 (6 ล้อ)","Class 3 (>6 ล้อ)"];
+const CLASS_VAR = ["--c1","--c2","--c3"];
+const DEF = {
+  days:30, mflow:[40,40,40], memPct:30, txnFee:2.5, rent:2100000,
+  dueM:7, dueN:7, penM:10, penN:10, collectFee:300,
+  compDayM:7, compDayN:7, gapM:0, gapN:0,
+  // Payment behaviour is per Class (index 0..2) x fare band (0..7).
+  onM:[[98,97,96,95,95,94,93,92],[98,97,96,95,95,94,93,92],[98,97,96,95,95,94,93,92]],
+  onN:[[70,65,60,55,50,45,40,35],[70,65,60,55,50,45,40,35],[70,65,60,55,50,45,40,35]],
+  // Repayment after compensation is per Class (0..2) x fare band (0..7), split by status.
+  repayM:[[40,40,40,40,40,40,40,40],[40,40,40,40,40,40,40,40],[40,40,40,40,40,40,40,40]],
+  repayN:[[40,40,40,40,40,40,40,40],[40,40,40,40,40,40,40,40],[40,40,40,40,40,40,40,40]],
+  // Share of the collection fees the company is actually able to claim (disputes, waived fines).
+  claimPct:100
+};
+let S = JSON.parse(JSON.stringify(DEF));
+let DATA = JSON.parse(JSON.stringify(BASE));
+let STALE_CLEARED = false;
+try{
+  const sv = localStorage.getItem('m7sim.settings'); if(sv) S = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(sv));
+  // Only reuse cached O-D data when it came from the SAME baseline build. When the shipped
+  // baseline changes (new source file), the old cache is discarded so the new figures win.
+  const dv = localStorage.getItem('m7sim.data');
+  if(dv){
+    const d = JSON.parse(dv);
+    if(d && d.ver === BASE.ver && d.stations && d.stations.length===BASE.stations.length){ DATA = d; }
+    else { localStorage.removeItem('m7sim.data'); STALE_CLEARED = !!d; }
+  }
+}catch(e){}
+// Settings saved before behaviour became per-class held a flat 8-band array; widen it to all 3 classes.
+function widenBehaviour(a, fb){
+  if(!Array.isArray(a)) return fb.map(r=>r.slice());
+  if(typeof a[0] === 'number') return [a.slice(), a.slice(), a.slice()];
+  return [0,1,2].map(c => Array.isArray(a[c]) && a[c].length===8 ? a[c].slice() : fb[c].slice());
+}
+S.onM = widenBehaviour(S.onM, DEF.onM);
+S.onN = widenBehaviour(S.onN, DEF.onN);
+// Repayment used to be shared by both statuses; split the saved value into member/non-member.
+if(S.repay && !S.repayM && !S.repayN){
+  const w = widenBehaviour(S.repay, DEF.repayM);
+  S.repayM = w; S.repayN = w.map(r=>r.slice());
+}
+delete S.repay;
+S.repayM = widenBehaviour(S.repayM, DEF.repayM);
+S.repayN = widenBehaviour(S.repayN, DEF.repayN);
+if(!(S.claimPct >= 0)) S.claimPct = DEF.claimPct;
+function persist(){ try{ localStorage.setItem('m7sim.settings', JSON.stringify(S)); localStorage.setItem('m7sim.data', JSON.stringify(DATA)); }catch(e){} }
+function dataEdited(){
+  for(let c=0;c<3;c++) for(let i=0;i<BASE.stations.length;i++) for(let j=0;j<BASE.stations.length;j++){
+    if(DATA.toll[c][i][j]!==BASE.toll[c][i][j] || DATA.vol[c][i][j]!==BASE.vol[c][i][j]) return true;
+  }
+  return false;
+}
+
+function bandOf(r){ for(let b=0;b<BANDS.length;b++){ if(r>=BANDS[b][0] && r<=BANDS[b][1]) return b; } return 0; }
+const fN = x => Math.round(x).toLocaleString('en-US');
+const fB = x => Math.round(x).toLocaleString('en-US') + ' บ.';
+function fC(x){
+  const a = Math.abs(x), sg = x<0?'-':'';
+  if(a>=1e9) return sg+(a/1e9).toFixed(2)+' พันล้านบาท';
+  if(a>=1e6) return sg+(a/1e6).toFixed(2)+' ล้านบาท';
+  if(a>=1e3) return sg+fN(a)+' บาท';
+  return sg+a.toFixed(0)+' บาท';
+}
+const pct = x => (x*100).toFixed(1)+'%';
+
+/* ================= ENGINE ================= */
+/*
+  Model (per business rules confirmed by the user, 2026-08-28):
+  - 1.6 sets each status's payment DEADLINE. 1.7 gives the on-time share AT that
+    deadline; the remainder is in default.
+  - 1.8 sets each status's COMPENSATION DAY, chosen independently of 1.6 (a member
+    may be due at 7 days yet compensated at 23). Clamped to >= the due date.
+  - The company waits until the compensation day, then compensates whatever is
+    STILL unpaid (toll only, no fine). Defaulters who settled during the window
+    are never compensated - the user states that share directly (gapM/gapN,
+    default 0); there is deliberately no inferred settlement curve.
+  - Late payers may return at ANY time after compensation: the company always
+    reclaims the compensated toll and earns the collection fee (1.10) on
+    non-member txns. repay%[band] (1.9) = share of COMPENSATED txns that pay.
+  - Fines (penalty multiplier x toll, from every late payer who settles) go to DOH.
+  - Consequence: the 1.8 date shifts WHEN compensation cash goes out
+    (R.cashInWindow / R.cashDeferred), not the accrued total - the total moves
+    only via 1.7 (fewer defaults) or the gap % (settled before compensation).
+*/
+function compute(){
+  const n = DATA.stations.length;
+  const memShare = S.memPct/100;
+  const R = {
+    txns:0, txnsByClass:[0,0,0], toll:0, tollByClass:[0,0,0],
+    tollByGroup:{m:0,n:0}, penByGroup:{m:0,n:0},
+    lateTxns:0, lateByClass:[0,0,0], lateByGroup:{m:0,n:0},
+    comp:0, compTxns:0, compByClass:[0,0,0], compByGroup:{m:0,n:0}, recovered:0, recoveredTxns:0, penalty:0,
+    collectTxns:0, collectRev:0, gapTxns:0, gapToll:0, lateToll:0,
+    bandClassTxn: [0,1,2].map(()=>Array(8).fill(0)),   // M-Flow txns per class per fare band
+    bandClassToll: [0,1,2].map(()=>Array(8).fill(0)),
+    bandClassCompM: [0,1,2].map(()=>Array(8).fill(0)), // compensated member txns per class/band
+    bandClassCompN: [0,1,2].map(()=>Array(8).fill(0)), // compensated non-member txns per class/band
+    collectEligibleTxns:0, collectEligibleRev:0,       // before the claimable % in 1.10
+    band: BANDS.map(()=>({txnM:0,txnN:0,lateM:0,lateN:0,gap:0,comp:0,rec:0,unrec:0,collect:0,pen:0})),
+    od: []
+  };
+  // Effective compensation day per group: cannot precede that group's own due date (1.6).
+  const cDay = { m: Math.max(S.compDayM, S.dueM), n: Math.max(S.compDayN, S.dueN) };
+  // Share of defaulters settling on their own inside the 1.6 -> 1.8 window (user-set, 0 = none).
+  const gapPct = { m: (cDay.m > S.dueM ? S.gapM : 0)/100, n: (cDay.n > S.dueN ? S.gapN : 0)/100 };
+  R.cDay = cDay; R.gapPct = gapPct;
+  const odMap = {};
+  for(let c=0;c<3;c++){
+    const mfp = S.mflow[c]/100;
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+      const r = DATA.toll[c][i][j]; const v0 = DATA.vol[c][i][j];
+      if(i===j || r<=0 || v0<=0) continue;
+      const t = v0 * S.days * mfp; if(t<=0) continue;
+      const b = bandOf(r);
+      R.txns += t; R.txnsByClass[c] += t;
+      R.toll += t*r; R.tollByClass[c] += t*r;
+      R.bandClassTxn[c][b] += t; R.bandClassToll[c][b] += t*r;
+      const key = i+'>'+j;
+      if(!(key in odMap)){ odMap[key] = {i,j,toll:0,txn:0}; }
+      odMap[key].toll += t*r; odMap[key].txn += t;
+      for(const g of ['m','n']){
+        const tg = t * (g==='m'? memShare : 1-memShare); if(tg<=0) continue;
+        const onP = (g==='m'? S.onM[c][b] : S.onN[c][b])/100;
+        const late = tg*(1-onP);                 // unpaid at this group's due date (1.6, split by 1.7)
+        const gap  = late * gapPct[g];           // settle on their own before the 1.8 date -> never compensated
+        const compT = late - gap;                // still unpaid on the 1.8 date -> company compensates
+        const repaid = compT * (g==='m'? S.repayM[c][b] : S.repayN[c][b])/100; // returns later (1.9)
+        const penMult = g==='m'? S.penM : S.penN;
+        R.tollByGroup[g] += tg*r;
+        R.lateTxns += late; R.lateByClass[c] += late; R.lateByGroup[g] += late; R.lateToll += late*r;
+        R.gapTxns += gap; R.gapToll += gap*r;
+        if(g==='m') R.bandClassCompM[c][b] += compT; else R.bandClassCompN[c][b] += compT;
+        R.compTxns += compT; R.comp += compT*r; R.compByClass[c] += compT*r; R.compByGroup[g] += compT*r;
+        R.recovered += repaid*r; R.recoveredTxns += repaid;
+        // every late payer who settles (in-window or after compensation) also pays the fine, which is DOH revenue
+        R.penalty += (gap+repaid)*r*penMult; R.penByGroup[g] += (gap+repaid)*r*penMult;
+        const B = R.band[b];
+        if(g==='m'){ B.txnM+=tg; B.lateM+=late; } else { B.txnN+=tg; B.lateN+=late; }
+        B.gap += gap; B.comp += compT*r; B.rec += repaid*r; B.unrec += (compT-repaid)*r; B.pen += (gap+repaid)*r*penMult;
+        if(g==='n'){
+          const claimable = repaid * S.claimPct/100;   // rest is disputed / fine waived -> not claimable
+          B.collect += claimable*S.collectFee;
+          R.collectEligibleTxns += repaid; R.collectEligibleRev += repaid*S.collectFee;
+          R.collectTxns += claimable;      R.collectRev += claimable*S.collectFee;
+        }
+      }
+    }
+  }
+  R.od = Object.values(odMap).sort((a,b)=>b.toll-a.toll);
+  R.unrecovered = R.comp - R.recovered;
+  // Cash actually leaving the company DURING the simulated window: traffic from day d is
+  // compensated on day d + cDay, so only the first (days - cDay) traffic-days are paid inside it.
+  const inWin = g => (R.compByGroup[g]/Math.max(S.days,1)) * Math.min(Math.max(S.days - cDay[g], 0), S.days);
+  R.cashInWindow = inWin('m') + inWin('n');
+  R.cashDeferred = R.comp - R.cashInWindow;
+  R.feeRev = R.txns * S.txnFee;
+  R.rentRev = S.rent/30 * S.days;
+  R.coRevenue = R.feeRev + R.rentRev + R.collectRev;
+  R.coNet = R.coRevenue - R.unrecovered;
+  R.dohRevenue = R.toll + R.penalty;
+  R.dohExpense = R.feeRev + R.rentRev + R.collectRev;
+  R.dohNet = R.dohRevenue - R.dohExpense;
+  return R;
+}
+
+/* ================= RENDER HELPERS ================= */
+function el(id){ return document.getElementById(id); }
+function barList(id, rows, opt){
+  opt = opt||{};
+  const max = Math.max(...rows.map(r=>r.v), 1e-9);
+  el(id).innerHTML = rows.map(r=>
+    `<div class="bl-row"><span class="bl-lab" title="${r.lab}">${r.lab}</span>`+
+    `<div class="bl-track"><div class="bl-fill" style="width:${(r.v/max*100).toFixed(1)}%;background:${r.color||'var(--accent)'}"></div></div>`+
+    `<span class="bl-val">${opt.fmt? opt.fmt(r.v) : fC(r.v)}</span></div>`).join('');
+}
+function stack(id, lgId, parts, fmt){
+  const tot = parts.reduce((s,p)=>s+p.v,0)||1e-9;
+  el(id).innerHTML = parts.map(p=>`<div style="background:${p.color};width:${(p.v/tot*100).toFixed(2)}%" title="${p.lab} ${pct(p.v/tot)}"></div>`).join('');
+  el(lgId).innerHTML = parts.map(p=>`<span><span class="sw" style="background:${p.color}"></span>${p.lab} · <b>${pct(p.v/tot)}</b> (${(fmt||fC)(p.v)})</span>`).join('');
+}
+function tile(t){
+  return `<div class="tile ${t.cls||''}"><div class="lb">${t.lb}</div><div class="v">${t.v}</div><div class="s">${t.s||''}</div></div>`;
+}
+
+/* Cumulative compensation outlay. Each operating day's late txns fall due after that
+   group's own 1.6 deadline, so outlay for group g on day d covers traffic from day d-due_g. */
+function renderCashFlow(R){
+  const cdM = R.cDay.m, cdN = R.cDay.n;
+  const N = S.days + Math.max(cdM, cdN);
+  const perDayM = R.compByGroup.m/Math.max(S.days,1);
+  const perDayN = R.compByGroup.n/Math.max(S.days,1);
+  const cum = d => ({
+    m: perDayM * Math.min(Math.max(d - cdM, 0), S.days),
+    n: perDayN * Math.min(Math.max(d - cdN, 0), S.days)
+  });
+  const total = R.comp;
+  const firstDay = (perDayM>0||perDayN>0) ? Math.min(perDayN>0?cdN+1:Infinity, perDayM>0?cdM+1:Infinity) : 0;
+  const peak = cum(N);
+  el('cashTiles').innerHTML =
+    tile({lb:'วันแรกที่ต้องจ่ายชดเชย', v: firstDay? ('วันที่ '+fN(firstDay)) : '—', s: 'ตามวันชดเชยที่เลือกในข้อ 1.8 (สมาชิก '+cdM+' · ไม่ใช่สมาชิก '+cdN+')'}) +
+    tile({lb:'เงินสดจ่ายจริงภายในรอบ '+fN(S.days)+' วัน', v: fC(R.cashInWindow), s: pct(total? R.cashInWindow/total:0)+' ของยอดชดเชยทั้งรอบ — ยิ่งชดเชยเร็ว ยิ่งต้องจ่ายมากภายในรอบ'}) +
+    tile({lb:'ภาระชดเชยทั้งรอบ (เกณฑ์คงค้าง)', v: fC(total), cls:'bad', s:'ไม่ขึ้นกับวันชดเชย — ขึ้นกับจำนวนรายการค้างเท่านั้น'});
+
+  const W=760, H=230, P={t:14,r:96,b:30,l:74};
+  const iw = W-P.l-P.r, ih = H-P.t-P.b;
+  const yMax = Math.max(total, 1);
+  const X = d => P.l + (d/N)*iw;
+  const Y = v => P.t + ih - (v/yMax)*ih;
+  const pts = []; for(let d=0; d<=N; d++) pts.push({d, ...cum(d)});
+  const areaM = `M${X(0)},${Y(0)} ` + pts.map(p=>`L${X(p.d)},${Y(p.m)}`).join(' ') + ` L${X(N)},${Y(0)} Z`;
+  const areaAll = `M${X(0)},${Y(0)} ` + pts.map(p=>`L${X(p.d)},${Y(p.m+p.n)}`).join(' ') + ` L${X(N)},${Y(0)} Z`;
+  const lineAll = 'M' + pts.map(p=>`${X(p.d)},${Y(p.m+p.n)}`).join(' L');
+  const lineM = 'M' + pts.map(p=>`${X(p.d)},${Y(p.m)}`).join(' L');
+  let grid='', ticks='';
+  for(let k=0;k<=4;k++){ const v=yMax*k/4, y=Y(v);
+    grid += `<line x1="${P.l}" y1="${y}" x2="${P.l+iw}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    ticks += `<text x="${P.l-8}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--muted)">${(v/1e6).toFixed(1)}M</text>`;
+  }
+  let xt='';
+  for(const d of [0, Math.round(N/4), Math.round(N/2), Math.round(3*N/4), N]){
+    xt += `<text x="${X(d)}" y="${P.t+ih+18}" text-anchor="middle" font-size="10" fill="var(--muted)">วันที่ ${d}</text>`;
+  }
+  let marks='';
+  for(const [day,lab,col] of [[cdN,'ไม่ใช่สมาชิกเริ่มจ่าย','var(--non)'],[cdM,'สมาชิกเริ่มจ่าย','var(--mem)']]){
+    if(day<=N) marks += `<line x1="${X(day)}" y1="${P.t}" x2="${X(day)}" y2="${P.t+ih}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 3" opacity=".8"/>`;
+  }
+  const endTot = peak.m+peak.n;
+  el('cashChart').innerHTML =
+   `<svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:600px;height:${H}px" role="img"
+      aria-label="ภาระสำรองจ่ายเงินชดเชยสะสม รวม ${fC(total)} เริ่มจ่ายวันที่ ${firstDay}">
+      ${grid}${ticks}${xt}
+      <path d="${areaAll}" fill="var(--non)" opacity=".18"/>
+      <path d="${areaM}" fill="var(--mem)" opacity=".28"/>
+      ${marks}
+      <path d="${lineAll}" fill="none" stroke="var(--non)" stroke-width="2" stroke-linejoin="round"/>
+      <path d="${lineM}" fill="none" stroke="var(--mem)" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="${X(N)}" cy="${Y(endTot)}" r="4" fill="var(--non)" stroke="var(--surface)" stroke-width="2"/>
+      <text x="${X(N)+8}" y="${Y(endTot)+4}" font-size="11" font-weight="700" fill="var(--ink)">${fC(endTot)}</text>
+      <line x1="${P.l}" y1="${P.t+ih}" x2="${P.l+iw}" y2="${P.t+ih}" stroke="var(--line2)" stroke-width="1"/>
+    </svg>`;
+  el('cashLegend').innerHTML =
+    `<span><span class="sw" style="background:var(--mem)"></span>สมาชิก — เริ่มจ่ายวันที่ ${cdM} · รวม ${fC(R.compByGroup.m)}</span>`+
+    `<span><span class="sw" style="background:var(--non)"></span>ไม่ใช่สมาชิก — เริ่มจ่ายวันที่ ${cdN} · รวม ${fC(R.compByGroup.n)}</span>`;
+}
+
+/* ================= RENDER ================= */
+function renderAll(){
+  const R = compute();
+  const st = DATA.stations;
+
+  /* verdict bar */
+  const chip = el('verdictChip');
+  const margin = R.coRevenue>0 ? R.coNet/R.coRevenue : 0;
+  if(R.coNet > 0 && margin > 0.05){ chip.className='chip good'; chip.textContent='กำไร — คุ้มค่าแก่การเข้าบริหาร'; }
+  else if(R.coNet >= 0){ chip.className='chip warn'; chip.textContent='กำไรบางมาก — เฉียดจุดคุ้มทุน'; }
+  else { chip.className='chip bad'; chip.textContent='ขาดทุน — ควรทบทวนเงื่อนไข'; }
+  el('vbNet').textContent = fC(R.coNet); el('vbNet').style.color = R.coNet>=0?'var(--good-text)':'var(--bad-text)';
+  el('vbRev').textContent = fC(R.coRevenue);
+  el('vbUnrec').textContent = fC(R.unrecovered);
+  el('vbDays').textContent = fN(S.days)+' วัน';
+  el('vbTxn').textContent = fN(R.txns)+' รายการ';
+
+  /* input page notes */
+  const dTx = [0,1,2].map(c=>{
+    let s=0; for(let i=0;i<st.length;i++) for(let j=0;j<st.length;j++) if(i!==j) s+=DATA.vol[c][i][j];
+    return s;
+  });
+  el('mfNote').innerHTML = `ปริมาณเฉลี่ยรวม ${fN(dTx[0]+dTx[1]+dTx[2])} รายการ/วัน → เข้า M-Flow ประมาณ <b>${fN(dTx[0]*S.mflow[0]/100 + dTx[1]*S.mflow[1]/100 + dTx[2]*S.mflow[2]/100)} รายการ/วัน</b> (C1: ${fN(dTx[0]*S.mflow[0]/100)} · C2: ${fN(dTx[1]*S.mflow[1]/100)} · C3: ${fN(dTx[2]*S.mflow[2]/100)})`;
+  el('rentPerDay').textContent = 'คิดเป็น '+fN(S.rent/30)+' บาท/วัน × '+fN(S.days)+' วัน = '+fC(S.rent/30*S.days);
+
+  /* 1.7 — real M-Flow volume per fare band for the Class being edited */
+  {
+    const c = behavClass;
+    const tot = R.bandClassTxn[c].reduce((a,b)=>a+b,0);
+    for(let b=0;b<8;b++){
+      const v = R.bandClassTxn[c][b];
+      el('bt'+b).textContent = v>=0.5 ? fN(v) : '0';
+      const zero = v < 0.5;
+      el('bt'+b).classList.toggle('zero', zero);
+      el('bl'+b).classList.toggle('zero', zero);
+    }
+    el('behavClassSum').innerHTML = tot>0
+      ? `${CLASS_LB[c]} — เข้า M-Flow <b>${fN(tot)}</b> รายการใน ${fN(S.days)} วัน · ค่าผ่านทางรวม <b>${fC(R.bandClassToll[c].reduce((a,b)=>a+b,0))}</b> · อัตราสูงสุดของ Class นี้ ${fN(Math.max(...DATA.toll[c].flat()))} บาท`
+      : `${CLASS_LB[c]} — ยังไม่มีรายการเข้า M-Flow (ตรวจสอบสัดส่วนในข้อ 1.2)`;
+  }
+
+  /* 1.9 — compensated volume per fare band, per status, for the Class being edited */
+  {
+    const c = repayClass;
+    const cm = R.bandClassCompM[c], cn = R.bandClassCompN[c];
+    let totM=0, totN=0, recM=0, recN=0;
+    for(let b=0;b<8;b++){
+      totM+=cm[b]; totN+=cn[b];
+      recM+=cm[b]*S.repayM[c][b]/100; recN+=cn[b]*S.repayN[c][b]/100;
+      el('rtm'+b).textContent = cm[b]>=0.5 ? fN(cm[b]) : '0';
+      el('rtn'+b).textContent = cn[b]>=0.5 ? fN(cn[b]) : '0';
+      const zero = (cm[b]+cn[b]) < 0.5;
+      el('rtm'+b).classList.toggle('zero', zero);
+      el('rtn'+b).classList.toggle('zero', zero);
+      el('rl'+b).classList.toggle('zero', zero);
+    }
+    el('repayClassSum').innerHTML = (totM+totN)>0
+      ? `${CLASS_LB[c]} — ชดเชยไป <b style="color:var(--mem)">สมาชิก ${fN(totM)}</b> + <b style="color:var(--non)">ไม่ใช่สมาชิก ${fN(totN)}</b> รายการ · จะกลับมาชำระ ${fN(recM)} / ${fN(recN)} รายการ` +
+        (totN>0 ? ` — เบิกค่าติดตามได้จาก <b>${fN(recN)}</b> รายการ (เฉพาะไม่ใช่สมาชิก)` : '')
+      : `${CLASS_LB[c]} — ยังไม่มีรายการที่ต้องชดเชย (ทุกรายการชำระตรงกำหนดตามข้อ 1.7)`;
+  }
+  const warn = (S.compDayM < S.dueM || S.compDayN < S.dueN)
+    ? `<br><b style="color:var(--warn)">หมายเหตุ:</b> วันชดเชยต้องไม่เร็วกว่ากำหนดชำระ ระบบจึงใช้ค่า สมาชิก ${R.cDay.m} วัน · ไม่ใช่สมาชิก ${R.cDay.n} วัน` : '';
+  const gapTxt = (R.gapTxns>0.5)
+    ? ` — มี <b>${fN(R.gapTxns)} รายการ</b> ชำระเองในช่วงก่อนวันชดเชย (${fC(R.gapToll)}) จึงไม่ถูกชดเชยและไม่ได้ค่าติดตาม`
+    : ' — ตั้งค่าชำระเองในช่วงก่อนชดเชยไว้ 0% รายการค้างชำระทั้งหมดจึงถูกชดเชย';
+  el('compNote').innerHTML =
+    `<b>สมาชิก</b> ชดเชย ณ วันที่ <b>${R.cDay.m}</b> (กำหนดชำระ ${S.dueM} วัน) → ${fC(R.compByGroup.m)} · ` +
+    `<b>ไม่ใช่สมาชิก</b> ชดเชย ณ วันที่ <b>${R.cDay.n}</b> (กำหนดชำระ ${S.dueN} วัน) → ${fC(R.compByGroup.n)}<br>` +
+    `รวมยอดชดเชย <b>${fC(R.comp)}</b> จาก ${fN(R.compTxns)} รายการ${gapTxt}${warn}<br>` +
+    `<b>สิ่งที่วันชดเชยเปลี่ยน:</b> เป็น "จังหวะจ่ายเงิน" ไม่ใช่ยอดรวม — ยอดชดเชยทั้งรอบขึ้นกับ<u>จำนวนรายการที่ยังค้าง</u> ` +
+    `จึงเท่าเดิมไม่ว่าจะจ่ายวันที่ 7 หรือ 23 (เว้นแต่ตั้ง % ผู้จ่ายเองข้างบนไว้มากกว่า 0) ` +
+    `แต่ <b>เงินสดที่ต้องจ่ายจริงภายในรอบ ${fN(S.days)} วันนี้</b> เปลี่ยนตามวันชดเชย: ตอนนี้ <b>${fC(R.cashInWindow)}</b> ` +
+    `(${pct(R.comp? R.cashInWindow/R.comp:0)} ของยอดชดเชย) — ชดเชยเร็วขึ้น ตัวเลขนี้จะสูงขึ้น ดูรายละเอียดที่การ์ดกระแสเงินสด หน้า 3`;
+
+  /* ---------- DOH PAGE ---------- */
+  el('dohTiles').innerHTML =
+    tile({lb:'รายรับรวมกรมทางหลวง', v:fC(R.dohRevenue), s:'ค่าผ่านทาง + ค่าปรับ ใน '+fN(S.days)+' วัน'}) +
+    tile({lb:'ค่าผ่านทางรวม', v:fC(R.toll), s:fN(R.txns)+' รายการ M-Flow — การันตีรับครบ 100%'}) +
+    tile({lb:'ค่าปรับที่เก็บได้', v:fC(R.penalty), s:'จากรายการค้างที่กลับมาชำระพร้อมค่าปรับ'}) +
+    tile({lb:'รายจ่ายกรมฯ ให้บริษัทฯ', v:fC(R.dohExpense), s:'ค่าจัดการ + ค่าเช่าระบบ + ค่าติดตาม'}) +
+    tile({lb:'รายรับสุทธิกรมฯ', v:fC(R.dohNet), cls:R.dohNet>=0?'good':'bad', s:'หลังหักรายจ่ายให้ผู้บริหารระบบ'}) +
+    tile({lb:'รายการค้างชำระ', v:fN(R.lateTxns), s:pct(R.txns? R.lateTxns/R.txns:0)+' ของรายการทั้งหมด'});
+
+  stack('dohTollFine','dohTollFineLg',[
+    {lab:'ค่าผ่านทาง', v:R.toll, color:'var(--c1)'},
+    {lab:'ค่าปรับ', v:R.penalty, color:'var(--c2)'}
+  ]);
+  el('dohTollFineTbl').innerHTML = '';
+
+  barList('dohByClass', [0,1,2].map(c=>({lab:CLASS_LB[c], v:R.tollByClass[c], color:`var(${CLASS_VAR[c]})`}))
+    .sort((a,b)=>b.v-a.v));
+
+  stack('dohMemStack','dohMemLg',[
+    {lab:'สมาชิก', v:R.tollByGroup.m + R.penByGroup.m, color:'var(--mem)'},
+    {lab:'ไม่ใช่สมาชิก', v:R.tollByGroup.n + R.penByGroup.n, color:'var(--non)'}
+  ]);
+  el('dohMemTbl').innerHTML = '';
+
+  el('dohExpList').innerHTML =
+    `<li><span>ค่าบริหารจัดการ Transaction (${S.txnFee} บ. × ${fN(R.txns)})</span><span class="amt">${fB(R.feeRev)}</span></li>`+
+    `<li><span>ค่าเช่าใช้ระบบ (เฉลี่ย ${fN(S.days)} วัน)</span><span class="amt">${fB(R.rentRev)}</span></li>`+
+    `<li><span>ค่าติดตามทวงถาม (${S.collectFee} บ. × ${fN(R.collectTxns)} รายการ)</span><span class="amt">${fB(R.collectRev)}</span></li>`+
+    `<li class="sum"><span>รวมรายจ่ายกรมฯ</span><span class="amt">${fB(R.dohExpense)}</span></li>`;
+
+  const odRows = R.od.map(o=>({lab:st[o.i]+' → '+st[o.j], v:o.toll}));
+  barList('odTop', odRows.slice(0,10), {});
+  barList('odBottom', odRows.slice(-10).reverse(), {});
+
+  /* ---------- COMPANY PAGE ---------- */
+  el('coTiles').innerHTML =
+    tile({lb:'กำไร/ขาดทุนสุทธิ', v:fC(R.coNet), cls:R.coNet>=0?'good':'bad', s:'ใน '+fN(S.days)+' วัน · อัตรากำไร '+pct(margin)}) +
+    tile({lb:'รายรับรวมบริษัทฯ', v:fC(R.coRevenue), s:'ค่าจัดการ + ค่าเช่าระบบ + ค่าติดตาม'}) +
+    tile({lb:'เงินชดเชยที่ต้องจ่าย', v:fC(R.comp), cls:'bad', s:fN(R.compTxns)+' รายการ (ชดเชยวันที่ '+R.cDay.m+' สมาชิก · '+R.cDay.n+' ไม่ใช่สมาชิก)'}) +
+    tile({lb:'เรียกคืนได้', v:fC(R.recovered), cls:'good', s:pct(R.comp? R.recovered/R.comp:0)+' ของยอดชดเชย'}) +
+    tile({lb:'สูญเสียถาวร (เรียกคืนไม่ได้)', v:fC(R.unrecovered), cls:'bad', s:'ความเสี่ยงหลักของโครงการ'}) +
+    tile({lb:'เงินสดจ่ายชดเชยจริงในรอบนี้', v:fC(R.cashInWindow), cls:'bad', s:'อีก '+fC(R.cashDeferred)+' ตกไปจ่ายหลังสิ้นรอบ (ตามวันชดเชยข้อ 1.8)'}) +
+    tile({lb:'เฉลี่ยกำไร/วัน', v:fC(R.coNet/Math.max(S.days,1)), cls:R.coNet>=0?'good':'bad', s:'ต่อวันดำเนินการ'});
+
+  el('coRevList').innerHTML =
+    `<li><span>ค่าบริหารจัดการ Transaction (${S.txnFee} บ./รายการ)</span><span class="amt plus">${fB(R.feeRev)}</span></li>`+
+    `<li><span>ค่าเช่าใช้ระบบ</span><span class="amt plus">${fB(R.rentRev)}</span></li>`+
+    `<li><span>ค่าติดตามทวงถาม (${fN(R.collectTxns)} รายการ × ${S.collectFee} บ.)${S.claimPct<100? ' — เบิกได้ '+S.claimPct+'% จาก '+fN(R.collectEligibleTxns)+' รายการที่มีสิทธิ์' : ''}</span><span class="amt plus">${fB(R.collectRev)}</span></li>`+
+    `<li class="sum"><span>รวมรายรับ</span><span class="amt plus">${fB(R.coRevenue)}</span></li>`;
+
+  el('coExpList').innerHTML =
+    (R.gapTxns>0.5 ? `<li><span>รายการค้างชำระ ${fN(R.lateTxns)} รายการ — ชำระเองก่อนวันชดเชย ${fN(R.gapTxns)} รายการ (${fC(R.gapToll)})</span><span class="amt muted">ไม่ต้องชดเชย</span></li>` : '')+
+    `<li><span>เงินชดเชยรายได้จ่ายให้กรมฯ — สมาชิก ณ วันที่ ${R.cDay.m} + ไม่ใช่สมาชิก ณ วันที่ ${R.cDay.n} (รวม ${fN(R.compTxns)} รายการ)</span><span class="amt minus">−${fB(R.comp)}</span></li>`+
+    `<li><span>เบิกคืนเมื่อผู้ใช้ทางกลับมาชำระหลังชดเชย</span><span class="amt plus">+${fB(R.recovered)}</span></li>`+
+    `<li class="sum"><span>ภาระชดเชยสุทธิ (เรียกคืนไม่ได้)</span><span class="amt minus">−${fB(R.unrecovered)}</span></li>`+
+    `<li class="sum"><span>กำไร/ขาดทุนสุทธิ = รายรับ − ภาระชดเชยสุทธิ</span><span class="amt ${R.coNet>=0?'plus':'minus'}">${R.coNet>=0?'':'−'}${fB(Math.abs(R.coNet))}</span></li>`;
+
+  el('collectNote').innerHTML = R.collectEligibleTxns>0.5
+    ? `ไม่ใช่สมาชิกที่ชดเชยแล้วและกลับมาชำระ <b>${fN(R.collectEligibleTxns)} รายการ</b> (ควรเบิกได้ ${fC(R.collectEligibleRev)})` +
+      (S.claimPct<100
+        ? ` → เบิกได้จริง ${S.claimPct}% = <b>${fN(R.collectTxns)} รายการ · ${fC(R.collectRev)}</b> (สูญเสียจากการโต้แย้ง/ยกเว้นค่าปรับ ${fC(R.collectEligibleRev-R.collectRev)})`
+        : ` → เบิกได้เต็ม <b>${fC(R.collectRev)}</b>`) +
+      ` · คิดเป็น ${pct(R.coRevenue? R.collectRev/R.coRevenue:0)} ของรายรับบริษัทฯ`
+    : `ยังไม่มีรายการที่มีสิทธิ์เบิกค่าติดตาม — ต้องเป็นรายการ "ไม่ใช่สมาชิก" ที่ชดเชยไปแล้วและกลับมาชำระ (ดูข้อ 1.9)`;
+
+  el('cashNote').innerHTML = `<b>Cash Flow:</b> บริษัทฯ ต้องสำรองจ่ายชดเชยเฉลี่ย <b>${fC(R.comp/Math.max(S.days,1))}/วัน</b> — ฝั่งสมาชิก ${fC(R.compByGroup.m/Math.max(S.days,1))}/วัน เริ่มจ่ายวันที่ ${R.cDay.m} หลังวันผ่านทาง · ฝั่งไม่ใช่สมาชิก ${fC(R.compByGroup.n/Math.max(S.days,1))}/วัน เริ่มวันที่ ${R.cDay.n} (ข้อ 1.8) — เลื่อนวันชดเชยออกไปช่วยลดเงินสำรองช่วงต้นโครงการ และหากมีผู้ชำระเองในช่วงนั้น (${pct(R.lateTxns? R.gapTxns/R.lateTxns:0)} ของรายการค้าง) ยอดชดเชยก็ลดลงด้วย แต่จะเสียสิทธิ์ค่าติดตามของรายการเหล่านั้น · การเรียกคืน ~${pct(R.comp? R.recovered/R.comp:0)} ทยอยกลับมาภายหลังโดยไม่ทราบกำหนดแน่นอน — ควรเตรียมวงเงินหมุนเวียนอย่างน้อย <b>${fC(R.comp/Math.max(S.days,1)*30)}</b> ต่อรอบ 30 วัน`;
+
+  barList('coLateByClass', [0,1,2].map(c=>({lab:CLASS_LB[c]+' — '+fN(R.lateByClass[c])+' รายการ', v:R.compByClass[c], color:`var(${CLASS_VAR[c]})`})).sort((a,b)=>b.v-a.v));
+
+  barList('coRevBars', [
+    {lab:'ค่าจัดการ Transaction', v:R.feeRev, color:'var(--c1)'},
+    {lab:'ค่าเช่าใช้ระบบ', v:R.rentRev, color:'var(--c2)'},
+    {lab:'ค่าติดตามทวงถาม', v:R.collectRev, color:'var(--c3)'}
+  ].sort((a,b)=>b.v-a.v));
+
+  renderCashFlow(R);
+
+  /* band table */
+  const showGap = R.gapTxns > 0.5;
+  let bt = `<tr><th>ช่วงค่าผ่านทาง</th><th>รายการ M-Flow</th><th>ค้างชำระ (สมาชิก)</th><th>ค้างชำระ (ไม่ใช่สมาชิก)</th>${showGap?'<th>ชำระเองก่อนชดเชย</th>':''}<th>เงินชดเชย</th><th>เรียกคืนได้</th><th>คงค้างถาวร</th><th>ค่าติดตามที่ได้</th><th>ค่าปรับ (ของกรมฯ)</th></tr>`;
+  let T = {t:0,lm:0,ln:0,g:0,c:0,r:0,u:0,f:0,p:0};
+  R.band.forEach((B,b)=>{
+    const tot = B.txnM+B.txnN; if(tot<=0.005 && B.comp<=0) { return; }
+    T.t+=tot; T.lm+=B.lateM; T.ln+=B.lateN; T.g+=B.gap; T.c+=B.comp; T.r+=B.rec; T.u+=B.unrec; T.f+=B.collect; T.p+=B.pen;
+    bt += `<tr><td>${BAND_LB[b]}</td><td>${fN(tot)}</td><td>${fN(B.lateM)}</td><td>${fN(B.lateN)}</td>${showGap?`<td>${fN(B.gap)}</td>`:''}<td>${fN(B.comp)}</td><td>${fN(B.rec)}</td><td>${fN(B.unrec)}</td><td>${fN(B.collect)}</td><td>${fN(B.pen)}</td></tr>`;
+  });
+  bt += `<tr class="tot"><td>รวม</td><td>${fN(T.t)}</td><td>${fN(T.lm)}</td><td>${fN(T.ln)}</td>${showGap?`<td>${fN(T.g)}</td>`:''}<td>${fN(T.c)}</td><td>${fN(T.r)}</td><td>${fN(T.u)}</td><td>${fN(T.f)}</td><td>${fN(T.p)}</td></tr>`;
+  el('bandTable').innerHTML = bt;
+
+  /* conclusion */
+  const perDay = R.coNet/Math.max(S.days,1);
+  // Breakeven on repayment: compensation is fixed (= all late txns); scaling every repay% by f
+  // scales both reclaimed toll and collection fees.
+  // net(f) = feeRev + rentRev + f*(recovered + collectRev) - comp = 0
+  const avgRepay = R.comp>0 ? R.recovered/R.comp : 0;   // weighted repayment rate now in force
+  const denom = R.recovered + R.collectRev;
+  const fStar = denom > 0 ? (R.comp - R.feeRev - R.rentRev)/denom : Infinity;
+  const xNeed = fStar * avgRepay;                        // weighted repayment rate at breakeven
+  el('conclusionCard').innerHTML = `<h3>สรุปผลการประเมิน</h3>
+    <p style="font-size:.95rem">${ R.coNet>0
+      ? `ภายใต้สมมติฐานปัจจุบัน โครงการ <b style="color:var(--good-text)">มีกำไร ${fC(R.coNet)}</b> ใน ${fN(S.days)} วัน (เฉลี่ย ${fC(perDay)}/วัน, อัตรากำไร ${pct(margin)}) — <b>ควรพิจารณารับบริหาร</b> โดยบริหารความเสี่ยงเรื่องเงินสำรองชดเชยให้รัดกุม`
+      : `ภายใต้สมมติฐานปัจจุบัน โครงการ <b style="color:var(--bad-text)">ขาดทุน ${fC(Math.abs(R.coNet))}</b> ใน ${fN(S.days)} วัน (เฉลี่ย ${fC(perDay)}/วัน) — <b>ยังไม่ควรรับเงื่อนไขนี้</b> ควรเจรจาเพิ่มค่าจัดการ/ค่าเช่า/ค่าติดตาม หรือยกระดับการติดตามหนี้`}
+    </p>
+    <ul class="io-list">
+      <li><span>อัตรากลับมาชำระขั้นต่ำที่คุ้มทุน (เฉลี่ยถ่วงน้ำหนัก — รวมผลของค่าติดตามทวงถาม)</span><span class="amt">${ xNeed<=0 ? 'กำไรแม้ไม่มีผู้กลับมาชำระเลย' : xNeed>avgRepay*0.999 && fStar>1 ? 'ต้องได้อย่างน้อย '+pct(xNeed)+' — สูงกว่าสมมติฐานปัจจุบัน ('+pct(avgRepay)+')' : 'ต้องได้อย่างน้อย '+pct(xNeed)+' (สมมติฐานปัจจุบัน '+pct(avgRepay)+')' }</span></li>
+      <li><span>หากไม่มีผู้กลับมาชำระเลย (เรียกคืน 0% และไม่ได้ค่าติดตาม)</span><span class="amt">${ (R.feeRev+R.rentRev-R.comp)>=0 ? 'ยังกำไร '+fC(R.feeRev+R.rentRev-R.comp) : 'ขาดทุน '+fC(Math.abs(R.feeRev+R.rentRev-R.comp)) }</span></li>
+      <li><span>หากทุกคนชำระตรงกำหนด 100% (ข้อ 1.7) — ไม่มีการชดเชยและไม่มีค่าติดตาม</span><span class="amt">${fC(R.feeRev+R.rentRev)}</span></li>
+      <li><span>สัดส่วนรายการค้างชำระทั้งระบบ</span><span class="amt">${pct(R.txns? R.lateTxns/R.txns:0)} (${fN(R.lateTxns)} รายการ)</span></li>
+      <li><span>เงินสำรองที่ต้องเตรียมต่อรอบ 30 วัน (ยอดชดเชย)</span><span class="amt">${fC(R.comp/Math.max(S.days,1)*30)}</span></li>
+      <li><span>รายรับคงที่ (ค่าเช่าระบบ) ครอบคลุมภาระชดเชยสุทธิ</span><span class="amt">${ R.unrecovered>0 ? pct(Math.min(9.99,R.rentRev/R.unrecovered)) : 'ไม่มีภาระคงค้าง' }</span></li>
+    </ul>`;
+
+  renderMatrices();
+  persist();
+}
+
+/* ---------- matrices ---------- */
+let curClass = 0;
+function matrixTable(tbl, kind){
+  const st = DATA.stations, n = st.length;
+  let h = '<tr><th>Origin \\ Dest.</th>' + st.map(s=>`<th>${s}</th>`).join('') + '</tr>';
+  for(let i=0;i<n;i++){
+    h += `<tr><td style="font-size:.75rem;font-weight:600;white-space:nowrap">${st[i]}</td>`;
+    for(let j=0;j<n;j++){
+      const v = DATA[kind][curClass][i][j];
+      h += `<td><input type="number" min="0" step="${kind==='toll'?5:1}" data-kind="${kind}" data-i="${i}" data-j="${j}" value="${kind==='toll'? v : (Math.round(v*100)/100)}" ${i===j?'disabled style="opacity:.25"':''} aria-label="${st[i]} ไป ${st[j]}"></td>`;
+    }
+    h += '</tr>';
+  }
+  tbl.innerHTML = h;
+}
+function renderMatrices(){
+  if(_skipMatrix) return;
+  matrixTable(el('tollMatrix'),'toll');
+  matrixTable(el('volMatrix'),'vol');
+  updateDataSum();
+}
+let _skipMatrix = false;
+document.addEventListener('input', e=>{
+  const t = e.target;
+  if(t.matches && t.matches('.matrix input')){
+    const {kind,i,j} = t.dataset; const v = parseFloat(t.value);
+    if(!isNaN(v) && v>=0){
+      DATA[kind][curClass][+i][+j] = v;
+      _skipMatrix = true; renderAll(); _skipMatrix = false;   // keep focus: don't rebuild matrices mid-edit
+      updateDataSum();
+    }
+  }
+});
+function updateDataSum(){
+  const st = DATA.stations; let vt=0, tt=0;
+  for(let i=0;i<st.length;i++) for(let j=0;j<st.length;j++){ if(i!==j){ vt+=DATA.vol[curClass][i][j]; tt+=DATA.vol[curClass][i][j]*DATA.toll[curClass][i][j]; } }
+  el('dataSum').textContent = CLASS_LB[curClass]+': '+fN(vt)+' รายการ/วัน · ค่าผ่านทาง ~'+fC(tt)+'/วัน';
+  const s = el('dataStatus');
+  if(dataEdited()){
+    s.innerHTML = `<span class="chip warn" style="font-size:.78rem;padding:2px 10px">ข้อมูลถูกแก้ไขจากไฟล์ต้นฉบับ</span> <span class="muted">ผลการจำลองคำนวณจากตัวเลขในตารางนี้ — กด "คืนค่าตามไฟล์ต้นฉบับ" เพื่อกลับไปใช้ข้อมูลตามไฟล์</span>`;
+  } else {
+    s.innerHTML = `<span class="chip good" style="font-size:.78rem;padding:2px 10px">ตรงตามไฟล์ต้นฉบับ</span> <span class="muted">ชุดข้อมูล ${BASE.ver}${STALE_CLEARED? ' · ล้างข้อมูลชุดเก่าที่ค้างในเบราว์เซอร์ให้แล้ว':''}</span>`;
+  }
+}
+
+/* ---------- controls wiring ---------- */
+let behavClass = 0;   // which Class the 1.7 grid is currently editing
+let repayClass = 0;   // which Class the 1.9 grid is currently editing
+function buildBehaviorGrids(){
+  const g = el('behavGrid');
+  const c = behavClass;
+  BAND_LB.forEach((lb,b)=>{
+    g.insertAdjacentHTML('beforeend',
+      `<span class="bandlb" id="bl${b}">${lb}</span>`+
+      `<span class="txnc" id="bt${b}">—</span>`+
+      `<input type="range" min="0" max="100" value="${S.onM[c][b]}" data-b="${b}" data-k="onM" aria-label="สมาชิก ${lb}">`+
+      `<span class="pv" id="onMv${b}">${S.onM[c][b]}%</span>`+
+      `<input type="range" min="0" max="100" value="${S.onN[c][b]}" data-b="${b}" data-k="onN" aria-label="ไม่ใช่สมาชิก ${lb}">`+
+      `<span class="pv" id="onNv${b}">${S.onN[c][b]}%</span>`);
+  });
+  const rg = el('repayGrid');
+  const rc = repayClass;
+  BAND_LB.forEach((lb,b)=>{
+    rg.insertAdjacentHTML('beforeend',
+      `<span class="bandlb" id="rl${b}">${lb}</span>`+
+      `<span class="txnc" id="rtm${b}">—</span>`+
+      `<input type="range" min="0" max="100" value="${S.repayM[rc][b]}" data-b="${b}" data-k="repayM" aria-label="สมาชิก กลับมาชำระ ${lb}">`+
+      `<span class="pv" id="repvM${b}">${S.repayM[rc][b]}%</span>`+
+      `<span class="txnc" id="rtn${b}">—</span>`+
+      `<input type="range" min="0" max="100" value="${S.repayN[rc][b]}" data-b="${b}" data-k="repayN" aria-label="ไม่ใช่สมาชิก กลับมาชำระ ${lb}">`+
+      `<span class="pv" id="repvN${b}">${S.repayN[rc][b]}%</span>`);
+  });
+}
+/* The gap only exists when the 1.8 date is later than the 1.6 deadline for that group.
+   Show the slider as "paid already / still unpaid" so it reads as a stocktake on the compensation day. */
+function syncGapUI(){
+  const eff = { m: Math.max(S.compDayM, S.dueM), n: Math.max(S.compDayN, S.dueN) };
+  for(const g of ['M','N']){
+    const key = g==='M'?'m':'n';
+    const due = g==='M'? S.dueM : S.dueN;
+    const has = eff[key] > due;
+    const sl = el('gap'+g), out = el('gap'+g+'v');
+    sl.disabled = !has;
+    sl.style.opacity = has ? '1' : '.35';
+    const v = has ? S['gap'+g] : 0;
+    out.innerHTML = has
+      ? `จ่ายแล้ว ${v}% · <span style="color:var(--ink2)">เหลือค้าง ${100-v}%</span>`
+      : `<span class="muted">ไม่มีช่วงเวลา (ชดเชยวันเดียวกับครบกำหนด)</span>`;
+  }
+  const noGap = eff.m<=S.dueM && eff.n<=S.dueN;
+  el('gapBlock').style.opacity = noGap ? '.65' : '1';
+}
+/* Presets are shortcuts; the number field is the source of truth and accepts any value. */
+function syncCollectPresets(){
+  document.querySelectorAll('#collectPresets button').forEach(b=>
+    b.classList.toggle('on', +b.dataset.v === +S.collectFee));
+}
+function syncControls(){
+  el('inDays').value = S.days;
+  document.querySelectorAll('#dayChips button').forEach(b=>b.classList.toggle('on', +b.dataset.v===S.days));
+  ['mf1','mf2','mf3'].forEach((id,i)=>{ el(id).value=S.mflow[i]; el(id+'v').textContent=S.mflow[i]+'%'; });
+  el('memPct').value = S.memPct;
+  el('memPctV').textContent = `สมาชิก ${S.memPct}% · ไม่ใช่สมาชิก ${100-S.memPct}%`;
+  el('memStackM').style.width = S.memPct+'%'; el('memStackN').style.width = (100-S.memPct)+'%';
+  el('txnFee').value = S.txnFee; el('rent').value = S.rent;
+  el('dueM').value = S.dueM; el('dueN').value = S.dueN; el('penM').value = S.penM; el('penN').value = S.penN;
+  el('compDayM').value = S.compDayM; el('compDayN').value = S.compDayN;
+  el('gapM').value = S.gapM; el('gapN').value = S.gapN;
+  syncGapUI();
+  el('collectFee').value = S.collectFee;
+  syncCollectPresets();
+  document.querySelectorAll('#behavGrid input[type=range]').forEach(r=>{
+    const b=+r.dataset.b, k=r.dataset.k; r.value = S[k][behavClass][b];
+    el((k==='onM'?'onMv':'onNv')+b).textContent = S[k][behavClass][b]+'%';
+  });
+  document.querySelectorAll('#behavClassSeg button').forEach(btn=>
+    btn.classList.toggle('on', +btn.dataset.c === behavClass));
+  document.querySelectorAll('#repayGrid input[type=range]').forEach(r=>{
+    const b=+r.dataset.b, k=r.dataset.k; r.value = S[k][repayClass][b];
+    el((k==='repayM'?'repvM':'repvN')+b).textContent = S[k][repayClass][b]+'%';
+  });
+  el('claimPct').value = S.claimPct; el('claimPctV').textContent = S.claimPct+'%';
+  document.querySelectorAll('#repayClassSeg button').forEach(btn=>
+    btn.classList.toggle('on', +btn.dataset.c === repayClass));
+}
+function wire(){
+  el('inDays').addEventListener('input', ()=>{ const v=parseInt(el('inDays').value); if(v>=1){ S.days=v; syncControls(); renderAll(); }});
+  el('dayChips').addEventListener('click', e=>{ if(e.target.dataset.v){ S.days=+e.target.dataset.v; syncControls(); renderAll(); }});
+  [['mf1',0],['mf2',1],['mf3',2]].forEach(([id,i])=> el(id).addEventListener('input', ()=>{ S.mflow[i]=+el(id).value; syncControls(); renderAll(); }));
+  el('memPct').addEventListener('input', ()=>{ S.memPct=+el('memPct').value; syncControls(); renderAll(); });
+  el('txnFee').addEventListener('input', ()=>{ const v=parseFloat(el('txnFee').value); if(v>=0){S.txnFee=v; renderAll();} });
+  el('rent').addEventListener('input', ()=>{ const v=parseFloat(el('rent').value); if(v>=0){S.rent=v; renderAll();} });
+  [['dueM','dueM'],['dueN','dueN'],['penM','penM'],['penN','penN'],
+   ['compDayM','compDayM'],['compDayN','compDayN']]
+    .forEach(([id,k])=> el(id).addEventListener('change', ()=>{ S[k]=+el(id).value; syncGapUI(); renderAll(); }));
+  el('collectFee').addEventListener('input', ()=>{ const v=parseFloat(el('collectFee').value); if(v>=0){ S.collectFee=v; syncCollectPresets(); renderAll(); } });
+  el('collectPresets').addEventListener('click', e=>{ if(e.target.dataset.v){
+    S.collectFee=+e.target.dataset.v; el('collectFee').value=S.collectFee; syncCollectPresets(); renderAll(); }});
+  ['gapM','gapN'].forEach(id => el(id).addEventListener('input', ()=>{
+    S[id]=+el(id).value; syncGapUI(); renderAll(); }));
+  el('behavGrid').addEventListener('input', e=>{ const t=e.target; if(t.dataset.k){
+    S[t.dataset.k][behavClass][+t.dataset.b]=+t.value;
+    el((t.dataset.k==='onM'?'onMv':'onNv')+t.dataset.b).textContent=t.value+'%'; renderAll(); }});
+  el('behavClassSeg').addEventListener('click', e=>{ if(e.target.dataset.c!==undefined){
+    behavClass = +e.target.dataset.c; syncControls(); renderAll(); }});
+  el('repayClassSeg').addEventListener('click', e=>{ if(e.target.dataset.c!==undefined){
+    repayClass = +e.target.dataset.c; syncControls(); renderAll(); }});
+  el('repayGrid').addEventListener('input', e=>{ const t=e.target; if(t.dataset.k){
+    S[t.dataset.k][repayClass][+t.dataset.b]=+t.value;
+    el((t.dataset.k==='repayM'?'repvM':'repvN')+t.dataset.b).textContent=t.value+'%'; renderAll(); }});
+  el('claimPct').addEventListener('input', ()=>{ S.claimPct=+el('claimPct').value;
+    el('claimPctV').textContent=S.claimPct+'%'; renderAll(); });
+  // "รีเซ็ตทั้งหมด" means everything: parameters AND the O-D tables.
+  el('btnReset').addEventListener('click', ()=>{
+    S=JSON.parse(JSON.stringify(DEF)); DATA=JSON.parse(JSON.stringify(BASE));
+    syncControls(); renderMatrices(); renderAll(); });
+  el('btnGo').addEventListener('click', ()=> showPage('pgCo'));
+  el('btnDataReset').addEventListener('click', ()=>{ DATA=JSON.parse(JSON.stringify(BASE)); renderAll(); });
+  el('dataClassSeg').addEventListener('click', e=>{ if(e.target.dataset.c!==undefined){
+    curClass=+e.target.dataset.c;
+    document.querySelectorAll('#dataClassSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.c===curClass));
+    renderMatrices(); }});
+  el('tabs').addEventListener('click', e=>{ const p=e.target.dataset.page; if(p) showPage(p); });
+}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('show', p.id===id));
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.page===id));
+  window.scrollTo({top:0});
+}
+buildBehaviorGrids();
+syncControls();
+wire();
+renderAll();
+</script>
