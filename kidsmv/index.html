@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kids MV Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --bg:#f6f6f3; --surface:#ffffff; --surface2:#efefeb; --ink:#181b22; --ink2:#51545d;
+  --muted:#8a8d95; --line:#e2e2dc; --line2:#d0d0c9;
+  --accent:#d9480f; --accent-soft:#fdeee6; --accent-ink:#ffffff;
+  --good:#0ca30c; --good-text:#006300; --good-soft:#e4f4e4;
+  --bad:#d03b3b; --bad-text:#b02c2c; --bad-soft:#fbe9e9;
+  --warn:#c98500; --warn-soft:#fdf3dd;
+  --shadow:0 1px 3px rgba(20,22,30,.07),0 4px 14px rgba(20,22,30,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1013; --surface:#1a1b1f; --surface2:#232428; --ink:#f1f1ee; --ink2:#c0c1bb;
+    --muted:#8f9299; --line:#2b2c31; --line2:#3a3b41;
+    --accent:#ff8a4c; --accent-soft:#3a2418; --accent-ink:#0f1013;
+    --good:#0ca30c; --good-text:#3ec43e; --good-soft:#17301a;
+    --bad:#e66767; --bad-text:#ef8686; --bad-soft:#3a1d1d;
+    --warn:#e0a41a; --warn-soft:#33290f;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1013; --surface:#1a1b1f; --surface2:#232428; --ink:#f1f1ee; --ink2:#c0c1bb;
+  --muted:#8f9299; --line:#2b2c31; --line2:#3a3b41;
+  --accent:#ff8a4c; --accent-soft:#3a2418; --accent-ink:#0f1013;
+  --good:#0ca30c; --good-text:#3ec43e; --good-soft:#17301a;
+  --bad:#e66767; --bad-text:#ef8686; --bad-soft:#3a1d1d;
+  --warn:#e0a41a; --warn-soft:#33290f;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'IBM Plex Sans Thai','Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:14.5px;line-height:1.55}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px 80px}
+header.top{padding:24px 0 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+header.top h1{font-size:1.45rem;font-weight:700;margin:0;letter-spacing:-.01em}
+header.top h1 .en{color:var(--accent)}
+header.top .sub{color:var(--ink2);font-size:.9rem;flex:1;min-width:220px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);margin-bottom:16px}
+.card h2{margin:0 0 4px;font-size:1.05rem;font-weight:700}
+.card h2 .num{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:7px;font-size:.74rem;font-weight:700;padding:2px 8px;margin-right:8px;vertical-align:2px}
+.hint{color:var(--ink2);font-size:.83rem;margin:0 0 12px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+label.f{display:block;font-size:.84rem;font-weight:600;color:var(--ink2);margin:0 0 5px}
+input[type=text],input[type=password],input[type=number],select,textarea{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line2);border-radius:9px;padding:8px 10px;width:100%}
+textarea{resize:vertical;min-height:90px;line-height:1.5}
+textarea.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem}
+input[type=range]{accent-color:var(--accent);width:100%}
+button{font:inherit;cursor:pointer}
+.btn{font-weight:600;border:1px solid var(--line2);background:var(--surface2);color:var(--ink);border-radius:10px;padding:8px 16px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.big{font-size:1.05rem;padding:12px 26px}
+.btn.sm{font-size:.8rem;padding:4px 10px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.drop{border:2px dashed var(--line2);border-radius:12px;padding:16px;text-align:center;color:var(--ink2);cursor:pointer;background:var(--surface2);transition:border-color .15s}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop.ok{border-style:solid;border-color:var(--good)}
+.drop.req{border-color:var(--bad)}
+.drop b{color:var(--ink)}
+.drop input{display:none}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+.thumbs img{height:70px;border-radius:8px;border:1px solid var(--line)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;font-weight:600;font-size:.8rem;background:var(--surface2);color:var(--ink2)}
+.chip.good{background:var(--good-soft);color:var(--good-text)}
+.chip.bad{background:var(--bad-soft);color:var(--bad-text)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.gate{margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--bad-soft);color:var(--bad-text);font-weight:600;font-size:.88rem}
+.gate.ok{background:var(--good-soft);color:var(--good-text)}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.steps li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--surface2)}
+.steps .ic{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:700;background:var(--line);color:var(--ink2)}
+.steps li.run .ic{background:var(--accent);color:var(--accent-ink);animation:pulse 1.2s infinite}
+.steps li.done .ic{background:var(--good);color:#fff}
+.steps li.err .ic{background:var(--bad);color:#fff}
+.steps li.skip{opacity:.5}
+.steps .st{font-size:.8rem;color:var(--ink2);font-variant-numeric:tabular-nums}
+@keyframes pulse{50%{opacity:.55}}
+.progress{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:12px 0}
+.progress>div{height:100%;background:var(--accent);width:0;transition:width .3s}
+.log{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.74rem;background:var(--surface2);border-radius:10px;padding:10px 12px;max-height:220px;overflow:auto;white-space:pre-wrap;color:var(--ink2)}
+.log .e{color:var(--bad-text)} .log .w{color:var(--warn)} .log .g{color:var(--good-text)}
+.scenes{display:grid;gap:12px}
+.scene{display:grid;grid-template-columns:minmax(0,320px) 1fr;gap:14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+@media (max-width:760px){.scene{grid-template-columns:1fr}}
+.scene .media{display:grid;gap:6px;align-content:start}
+.scene .frame{aspect-ratio:16/9;background:var(--surface2);border-radius:8px;overflow:hidden;display:grid;place-items:center;color:var(--muted);font-size:.8rem;text-align:center;padding:0}
+.scene .frame img,.scene .frame video{width:100%;height:100%;object-fit:cover;display:block}
+.scene .meta{font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.scene .hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.scene .hd .no{font-weight:700;font-size:1rem}
+.scene .hd input{width:82px;padding:4px 6px;font-variant-numeric:tabular-nums}
+.scene .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px}
+.scene .fields label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.scene .fields textarea{min-height:52px;font-size:.84rem;padding:6px 8px}
+.scene details{margin-top:8px}
+.scene summary{cursor:pointer;font-size:.8rem;color:var(--ink2);font-weight:600}
+.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px}
+.note{background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:10px 14px;font-size:.84rem;color:var(--ink2);margin-top:12px}
+.note.warn{border-left-color:var(--warn)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px;counter-reset:f}
+.flow div{background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:.82rem;color:var(--ink2);position:relative}
+.flow div b{display:block;color:var(--ink);font-size:.88rem;margin-bottom:2px}
+.flow div::before{counter-increment:f;content:counter(f);position:absolute;top:8px;right:10px;font-weight:700;color:var(--accent)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:20px;width:min(640px,calc(100vw - 32px));box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.sheetprev{width:100%;border-radius:10px;border:1px solid var(--line);margin-top:10px}
+.muted{color:var(--muted)}
+.small{font-size:.8rem}
+h3{font-size:.95rem;margin:16px 0 6px}
+ol.howto{padding-left:20px;margin:6px 0;color:var(--ink2);font-size:.88rem}
+ol.howto li{margin:3px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>🎵 Kids MV <span class="en">Automation Studio</span></h1>
+  <div class="sub">ใส่เพลง mp3 + เนื้อเพลง + Style Guide → ระบบสร้าง Storyboard, ภาพ 2K, คลิปวิดีโอ 1080p และ Editing Guide ให้อัตโนมัติ</div>
+  <button class="btn sm" id="themeBtn" title="สลับธีม">◐ ธีม</button>
+  <button class="btn sm" id="settingsBtn">⚙️ ตั้งค่า / API Key</button>
+</header>
+
+<!-- ===== 1. INPUTS ===== -->
+<section class="card">
+  <h2><span class="num">ขั้นที่ 1</span>ข้อมูลตั้งต้น (สิ่งที่คุณเตรียมให้)</h2>
+  <p class="hint">3 อย่างเท่านั้น: ไฟล์เพลง, เนื้อเพลง, ภาพ Style Guide — <b>ถ้าไม่มี Style Guide ระบบจะไม่เริ่มทำงานเด็ดขาด</b></p>
+  <div class="grid g3">
+    <div>
+      <label class="f">① ไฟล์เพลง (.mp3)</label>
+      <label class="drop" id="mp3Drop"><input type="file" id="mp3In" accept="audio/mpeg,audio/mp3,.mp3,audio/*">
+        <div id="mp3Info"><b>เลือก / ลากไฟล์ mp3 มาวาง</b><br><span class="small">ความยาวแนะนำ 1–2 นาที</span></div>
+      </label>
+      <audio id="player" controls style="width:100%;margin-top:8px;display:none"></audio>
+    </div>
+    <div>
+      <label class="f">② ภาพ Style Guide (บังคับ · ได้สูงสุด 6 ภาพ)</label>
+      <label class="drop req" id="styleDrop"><input type="file" id="styleIn" accept="image/*" multiple>
+        <div><b>เลือก / ลากภาพ Style Guide</b><br><span class="small">ตัวละคร, ลายเส้น, โทนสี, character sheet</span></div>
+        <div class="thumbs" id="styleThumbs"></div>
+      </label>
+    </div>
+    <div>
+      <label class="f" for="titleIn">ชื่อเพลง</label>
+      <input type="text" id="titleIn" placeholder="เช่น ช้างน้อยอาบน้ำ">
+      <label class="f" for="secIn" style="margin-top:12px">ความยาวต่อ 1 ภาพ/คลิป: <span id="secVal">3.5</span> วินาที</label>
+      <input type="range" id="secIn" min="2.5" max="5" step="0.5" value="3.5">
+      <div class="small muted" id="shotEst">จำนวนภาพโดยประมาณ: –</div>
+      <label class="f" style="margin-top:12px">วิธีสร้างคลิปวิดีโอ</label>
+      <select id="modeIn">
+        <option value="veo">อัตโนมัติ 100% — Veo 3.1 ผ่าน Gemini API (โมเดลเดียวกับ Google Flow)</option>
+        <option value="flow">กึ่งอัตโนมัติ — Export Pack ไปสร้างใน Google Flow แล้วอัปโหลดกลับ</option>
+      </select>
+    </div>
+  </div>
+  <label class="f" for="lyricsIn" style="margin-top:14px">③ เนื้อเพลง (Lyrics)</label>
+  <textarea id="lyricsIn" rows="7" placeholder="วางเนื้อเพลงที่นี่ (ใส่ [Verse] / [Chorus] ได้)"></textarea>
+  <div id="gate" class="gate">—</div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn primary big" id="runBtn">▶ เริ่ม Automation</button>
+    <button class="btn" id="stopBtn" disabled>■ หยุด</button>
+    <button class="btn" id="resetBtn">↺ เริ่มเพลงใหม่</button>
+  </div>
+</section>
+
+<!-- ===== 2. PIPELINE ===== -->
+<section class="card">
+  <h2><span class="num">ขั้นที่ 2</span>Automation Pipeline</h2>
+  <p class="hint">ระบบทำงานต่อเนื่องให้ทั้งหมด หากหยุดกลางทาง กด “เริ่ม Automation” อีกครั้งเพื่อทำต่อจากจุดเดิม (ไม่สร้างซ้ำสิ่งที่ผ่านแล้ว)</p>
+  <ul class="steps" id="steps"></ul>
+  <div class="progress"><div id="prog"></div></div>
+  <div class="log" id="log" aria-live="polite"></div>
+</section>
+
+<!-- ===== 3. STYLE BIBLE ===== -->
+<section class="card">
+  <h2><span class="num">ล็อก Style</span>Style Bible ประจำช่อง</h2>
+  <p class="hint">AI อ่าน Style Guide แล้วสรุปเป็น “Style Bible” (ตัวละคร, ลายเส้น, รหัสสี) และ<b>ล็อกไว้ตามลายนิ้วมือของไฟล์ Style Guide</b> — เพลงต่อไปที่ใช้ Style Guide เดิมจะได้ Style Bible ชุดเดิมทุกตัวอักษร ป้องกัน Style drift · ทุกภาพยังส่งภาพ Style Guide จริงเป็น reference ด้วยทุกครั้ง</p>
+  <textarea id="bibleTa" class="code" rows="10" placeholder="(จะถูกสร้างอัตโนมัติ)"></textarea>
+  <div class="row" style="margin-top:8px">
+    <span class="chip" id="bibleChip">ยังไม่มี</span>
+    <button class="btn sm" id="bibleSave">💾 บันทึกการแก้ไข & ล็อก</button>
+    <button class="btn sm" id="bibleRedo">↻ วิเคราะห์ Style Guide ใหม่</button>
+  </div>
+</section>
+
+<!-- ===== 4. STORYBOARD ===== -->
+<section class="card">
+  <h2><span class="num">Storyboard</span>ฉาก / ภาพ / คลิป</h2>
+  <p class="hint">แก้ไขได้ทุกช่อง (เวลา, มุมกล้อง, Action, Dialogue, SFX, Prompt) แล้วกดสร้างภาพ/คลิปใหม่เฉพาะฉากได้ · ภาพต้อง ≥ 2560×1440 และคลิป ≥ 1920×1080 ไม่เช่นนั้นระบบจะปฏิเสธ (ไม่มีการ upscale)</p>
+  <div class="row" style="margin-bottom:10px">
+    <span class="chip" id="sbChip">0 ฉาก</span>
+    <button class="btn sm" id="sbRedo">↻ สร้าง Storyboard ใหม่</button>
+    <label class="btn sm">⤒ อัปโหลดคลิปหลายไฟล์ (จาก Flow)<input type="file" id="bulkClips" accept="video/mp4,video/*" multiple style="display:none"></label>
+  </div>
+  <div class="scenes" id="scenes"><div class="muted small">ยังไม่มี Storyboard</div></div>
+</section>
+
+<!-- ===== 5. OUTPUTS ===== -->
+<section class="card">
+  <h2><span class="num">ขั้นที่ 3</span>ผลลัพธ์ & ดาวน์โหลด</h2>
+  <p class="hint">ZIP เดียวมีครบ: ภาพ 2K ทุกฉาก, Storyboard 1 ภาพ, คลิป mp4, Editing Guide (.txt), ไฟล์ EDL สำหรับ import เข้า DaVinci Resolve, Prompt สำหรับ Google Flow</p>
+  <div class="dl">
+    <button class="btn primary" id="dlZip" disabled>📦 ดาวน์โหลดทั้งหมด (.zip)</button>
+    <button class="btn" id="dlGuide" disabled>📝 editing_guide.txt</button>
+    <button class="btn" id="dlEdl" disabled>🎬 timeline.edl (Resolve)</button>
+    <button class="btn" id="dlSheet" disabled>🖼️ storyboard.png</button>
+    <button class="btn" id="dlFlow" disabled>🌊 Flow Pack (.zip)</button>
+  </div>
+  <img id="sheetPrev" class="sheetprev" alt="Storyboard sheet" style="display:none">
+  <details style="margin-top:12px"><summary class="small">ดูตัวอย่าง Editing Guide</summary>
+    <textarea id="guidePrev" class="code" rows="16" readonly></textarea></details>
+</section>
+
+<!-- ===== 6. HOW TO ===== -->
+<section class="card">
+  <h2><span class="num">คู่มือ</span>Workflow ทั้งระบบ (ทำซ้ำได้ทุกเพลง)</h2>
+  <div class="flow">
+    <div><b>Input</b>mp3 + เนื้อเพลง + Style Guide (บังคับ)</div>
+    <div><b>Style Bible</b>Gemini อ่าน Style Guide → ล็อกตัวละคร/สี/ลายเส้น</div>
+    <div><b>Storyboard</b>Gemini ฟังเพลงจริง จับเวลาเนื้อเพลง → แบ่งฉาก 2.5–5 วิ พร้อม Camera / Action / Dialogue / SFX</div>
+    <div><b>ภาพนิ่ง 2K</b>Nano Banana Pro + Style Guide เป็น reference ทุกภาพ + ภาพก่อนหน้าเพื่อความต่อเนื่อง</div>
+    <div><b>QA อัตโนมัติ</b>ตรวจความละเอียด ≥2560×1440 + AI ให้คะแนนความตรง Style ต่ำกว่าเกณฑ์ → สร้างใหม่</div>
+    <div><b>Storyboard Sheet</b>รวมทุกฉากเป็นภาพเดียว ≥3840×2160</div>
+    <div><b>คลิปวิดีโอ</b>Veo 3.1 Image-to-Video 1080p (หรือ Flow Pack) + ตรวจ ≥1920×1080</div>
+    <div><b>Editing Guide</b>.txt บอกช่วงเวลา/เนื้อเพลง/คลิป + EDL import ลง Resolve ได้ทันที</div>
+  </div>
+  <h3>ใช้งานครั้งแรก</h3>
+  <ol class="howto">
+    <li>สร้าง Gemini API Key ที่ <b>aistudio.google.com/apikey</b> (ต้องเปิด Billing เพื่อใช้ Nano Banana Pro ความละเอียด 2K และ Veo 3.1) แล้วใส่ในปุ่ม ⚙️ ตั้งค่า</li>
+    <li>ใส่ Style Guide ชุดหลักของช่อง → ระบบสร้าง Style Bible ครั้งแรก ตรวจ/แก้ แล้วกด “บันทึก & ล็อก” — จากนี้ทุกเพลงจะใช้ชุดเดิม</li>
+  </ol>
+  <h3>ทุกเพลง (≈ 2 เพลง/สัปดาห์)</h3>
+  <ol class="howto">
+    <li>ใส่ mp3, เนื้อเพลง, Style Guide (ไฟล์เดิม) → กด ▶ เริ่ม Automation แล้วปล่อยไว้ (ภาพ ~40 ภาพ + คลิป ~40 คลิป ใช้เวลาราว 30–90 นาที แล้วแต่โควตา API)</li>
+    <li>โหมด Flow: ดาวน์โหลด Flow Pack → ใน Google Flow เลือก <i>Frames to Video</i> ใส่ภาพ scene_XX.png + prompt จาก flow_prompts.txt → ดาวน์โหลดคลิปที่ 1080p (ห้ามเลือก Upscale) → ตั้งชื่อ clip_XX.mp4 → กด “อัปโหลดคลิปหลายไฟล์”</li>
+    <li>ดาวน์โหลด ZIP → DaVinci Resolve: สร้าง Timeline 1920×1080 ที่ fps ตามตั้งค่า → ลาก mp3 ลง A1 ที่ 01:00:00:00 → <i>File › Import › Timeline › timeline.edl</i> (ชี้โฟลเดอร์ clips) หรือวางตาม editing_guide.txt</li>
+    <li>ปิดเสียงคลิป หรือลดเหลือ ~-18 dB เพื่อเก็บ SFX → ใส่ Title/End Screen → Export → อัปโหลด YouTube (ตั้ง “Made for Kids”)</li>
+  </ol>
+  <div class="note warn">ข้อจำกัดที่ควรรู้: Google Flow ยังไม่มี API สาธารณะ ระบบจึงเรียก <b>Veo 3.1</b> (โมเดลที่อยู่เบื้องหลัง Flow) ผ่าน Gemini API โดยตรงในโหมดอัตโนมัติ · คลิป Veo มีความยาวขั้นต่ำ 4–8 วินาที ระบบจึงระบุใน Editing Guide ว่าให้ตัดใช้ช่วงไหนของคลิป · API Key ถูกเก็บในเบราว์เซอร์ของคุณเท่านั้นและส่งตรงไปที่ Google</div>
+</section>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+<dialog id="settings">
+  <h2 style="margin:0 0 12px">⚙️ ตั้งค่า</h2>
+  <div class="grid g2">
+    <div style="grid-column:1/-1"><label class="f" for="keyIn">Gemini API Key</label>
+      <input type="password" id="keyIn" placeholder="AIza..." autocomplete="off">
+      <label class="small"><input type="checkbox" id="keyRemember" checked> จำไว้ในเบราว์เซอร์นี้</label></div>
+    <div><label class="f" for="mText">โมเดลวิเคราะห์ / Storyboard / QA</label><input type="text" id="mText"></div>
+    <div><label class="f" for="mImage">โมเดลสร้างภาพ (Nano Banana)</label><input type="text" id="mImage"></div>
+    <div><label class="f" for="mVideo">โมเดลวิดีโอ (Veo)</label><input type="text" id="mVideo"></div>
+    <div><label class="f" for="imgSize">ขนาดภาพ</label><select id="imgSize"><option value="2K">2K (2752×1536)</option><option value="4K">4K (5504×3072)</option></select></div>
+    <div><label class="f" for="vidRes">ความละเอียดคลิป</label><select id="vidRes"><option value="1080p">1080p</option><option value="4k">4K</option></select></div>
+    <div><label class="f" for="vidDur">ความยาวคลิปที่สั่ง Veo (วินาที)</label><select id="vidDur"><option>8</option><option>6</option><option>4</option></select></div>
+    <div><label class="f" for="fpsIn">FPS ของ Timeline</label><select id="fpsIn"><option>24</option><option>25</option><option>30</option></select></div>
+    <div><label class="f" for="concIn">งานพร้อมกัน (ภาพ/คลิป)</label><input type="number" id="concIn" min="1" max="6"></div>
+    <div><label class="f" for="qaIn">QA Style ขั้นต่ำ (0–10, 0 = ปิด)</label><input type="number" id="qaIn" min="0" max="10"></div>
+    <div><label class="f" for="retryIn">สร้างใหม่สูงสุด (ครั้ง/ฉาก)</label><input type="number" id="retryIn" min="0" max="5"></div>
+    <div style="grid-column:1/-1"><label class="small"><input type="checkbox" id="contIn"> ส่งภาพฉากก่อนหน้าเป็น reference (ต่อเนื่องขึ้น แต่สร้างภาพทีละภาพ ช้ากว่า)</label></div>
+  </div>
+  <p class="small muted">หมายเหตุ: Veo 3.1 ที่ 1080p/4K มักบังคับความยาว 8 วินาที — ใช้ 8 เป็นค่าเริ่มต้น แล้วตัดใช้เฉพาะช่วงที่ต้องการตาม Editing Guide</p>
+  <div class="row" style="justify-content:flex-end;margin-top:10px">
+    <button class="btn primary" id="setSave">บันทึก</button>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+/* ================= state & settings ================= */
+const $=s=>document.querySelector(s);
+const API='https://generativelanguage.googleapis.com/v1beta/';
+const MIN_IMG={w:2560,h:1440}, MIN_VID={w:1920,h:1080};
+const DEF={text:'gemini-2.5-pro',image:'gemini-3-pro-image-preview',video:'veo-3.1-generate-preview',
+  imgSize:'2K',vidRes:'1080p',vidDur:'8',fps:'24',conc:2,qa:7,retry:2,cont:false};
+const LS={get(k,d){try{const v=localStorage.getItem('kmv.'+k);return v==null?d:JSON.parse(v)}catch{return d}},
+  set(k,v){try{localStorage.setItem('kmv.'+k,JSON.stringify(v))}catch{}},
+  del(k){try{localStorage.removeItem('kmv.'+k)}catch{}}};
+let CFG=Object.assign({},DEF,LS.get('cfg',{}));
+let KEY=LS.get('key','')||'';
+const S={mp3:null,mp3B64:null,dur:0,style:[],styleHash:'',bible:null,storyMeta:null,scenes:[],
+  images:{},clips:{},sheet:null,guide:'',edl:'',running:false,abort:false};
+const pad2=n=>String(n).padStart(2,'0');
+const sid=id=>pad2(id);
+
+/* ================= theme ================= */
+(function(){const t=LS.get('theme',null);if(t)document.documentElement.dataset.theme=t;
+ $('#themeBtn').onclick=()=>{const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+  const cur=document.documentElement.dataset.theme||(dark?'dark':'light');const nx=cur==='dark'?'light':'dark';
+  document.documentElement.dataset.theme=nx;LS.set('theme',nx)}})();
+
+/* ================= log / steps ================= */
+const STEPS=[['style','วิเคราะห์ Style Guide → Style Bible'],['story','ฟังเพลง + เนื้อเพลง → Storyboard'],
+ ['images','สร้างภาพนิ่ง 2K ทุกฉาก + QA'],['sheet','สร้างภาพ Storyboard รวม'],
+ ['videos','สร้างคลิปวิดีโอ 1080p'],['guide','สร้าง Editing Guide + EDL']];
+const stepState={};
+function renderSteps(){ $('#steps').innerHTML=STEPS.map(([k,l],i)=>{const s=stepState[k]||{};
+  return `<li class="${s.c||''}"><span class="ic">${s.c==='done'?'✓':s.c==='err'?'!':i+1}</span><span>${l}</span><span class="st">${s.t||''}</span></li>`}).join('')}
+function step(k,c,t){stepState[k]={c,t:t||''};renderSteps()}
+function log(msg,cls){const d=document.createElement('div');if(cls)d.className=cls;
+  d.textContent=`[${new Date().toLocaleTimeString('th-TH')}] ${msg}`;const L=$('#log');L.appendChild(d);L.scrollTop=L.scrollHeight}
+function prog(p){$('#prog').style.width=Math.round(p*100)+'%'}
+renderSteps();
+
+/* ================= helpers ================= */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function blobToB64(b){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(b)})}
+function b64ToBlob(b64,mime){const bin=atob(b64);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new Blob([a],{type:mime})}
+async function sha256(str){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+async function imgSize(blob){const bm=await createImageBitmap(blob);const r={w:bm.width,h:bm.height};bm.close();return r}
+function videoMeta(blob){return new Promise((res,rej)=>{const v=document.createElement('video');v.preload='metadata';v.muted=true;
+  const u=URL.createObjectURL(blob);v.onloadedmetadata=()=>{res({w:v.videoWidth,h:v.videoHeight,dur:v.duration});URL.revokeObjectURL(u)};
+  v.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('อ่านไฟล์วิดีโอไม่ได้'))};v.src=u})}
+function fmt(t){const m=Math.floor(t/60),s=t-m*60;return `${pad2(m)}:${s.toFixed(2).padStart(5,'0')}`}
+function tc(t,fps){const f=Math.round(t*fps);const fr=f%fps,s=Math.floor(f/fps)%60,m=Math.floor(f/fps/60)%60,h=Math.floor(f/fps/3600);
+  return `${pad2(h)}:${pad2(m)}:${pad2(s)}:${pad2(fr)}`}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+function slug(){return ($('#titleIn').value.trim()||'kids-song').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,'_').slice(0,60)}
+function checkAbort(){if(S.abort)throw new Error('ผู้ใช้กดหยุด')}
+async function pool(items,n,fn){let i=0;const run=async()=>{while(i<items.length){checkAbort();const it=items[i++];await fn(it)}};
+  await Promise.all(Array.from({length:Math.max(1,Math.min(n,items.length))},run))}
+/* downscale a reference image for upload only (input, not output) */
+async function prepRef(file){const bm=await createImageBitmap(file);const max=2048;let {width:w,height:h}=bm;
+  if(Math.max(w,h)<=max&&file.size<3.5e6){bm.close();return {mime:file.type||'image/png',b64:await blobToB64(file)}}
+  const k=Math.min(1,max/Math.max(w,h));const c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);
+  c.getContext('2d').drawImage(bm,0,0,c.width,c.height);bm.close();
+  const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.92));return {mime:'image/jpeg',b64:await blobToB64(b)}}
+
+/* ================= Gemini API ================= */
+async function api(path,body,{method='POST',tries=5}={}){
+  if(!KEY)throw new Error('ยังไม่ได้ใส่ Gemini API Key (กด ⚙️ ตั้งค่า)');
+  for(let a=0;a<tries;a++){checkAbort();
+    let r;try{r=await fetch(API+path,{method,headers:{'Content-Type':'application/json','x-goog-api-key':KEY},body:body?JSON.stringify(body):undefined})}
+    catch(e){if(a===tries-1)throw e;await sleep(2000*2**a);continue}
+    if(r.ok)return r.json();
+    const txt=await r.text();
+    if([429,500,502,503,504].includes(r.status)&&a<tries-1){const w=Math.min(60000,4000*2**a);log(`API ${r.status} — รอ ${w/1000}s แล้วลองใหม่`,'w');await sleep(w);continue}
+    let m=txt;try{m=JSON.parse(txt).error.message}catch{}
+    throw new Error(`API ${r.status}: ${m}`)}}
+function partsOf(res){const c=res.candidates&&res.candidates[0];
+  if(!c){const br=res.promptFeedback&&res.promptFeedback.blockReason;throw new Error('โมเดลไม่ตอบ'+(br?` (${br})`:''))}
+  return (c.content&&c.content.parts)||[]}
+function parseJSON(t){t=t.trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+  try{return JSON.parse(t)}catch{const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));throw new Error('อ่าน JSON จากโมเดลไม่ได้')}}
+async function geminiJSON(parts,temp=0.4){
+  const res=await api(`models/${CFG.text}:generateContent`,{contents:[{role:'user',parts}],
+    generationConfig:{temperature:temp,responseMimeType:'application/json'}});
+  return parseJSON(partsOf(res).filter(p=>p.text&&!p.thought).map(p=>p.text).join(''))}
+const styleParts=()=>S.style.map(s=>({inlineData:{mimeType:s.mime,data:s.b64}}));
+
+/* ================= inputs ================= */
+function bindDrop(drop,input,handler){['dragenter','dragover'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over')}));
+  ['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over')}));
+  drop.addEventListener('drop',ev=>handler([...ev.dataTransfer.files]));input.addEventListener('change',()=>handler([...input.files]))}
+bindDrop($('#mp3Drop'),$('#mp3In'),async files=>{const f=files.find(f=>/audio|\.mp3$/i.test(f.type+f.name));if(!f)return;
+  S.mp3=f;S.mp3B64=null;const p=$('#player');p.src=URL.createObjectURL(f);p.style.display='block';
+  await new Promise(r=>{p.onloadedmetadata=r;p.onerror=r});S.dur=p.duration||0;
+  $('#mp3Info').innerHTML=`<b>${f.name.replace(/</g,'&lt;')}</b><br><span class="small">${fmt(S.dur)} · ${(f.size/1e6).toFixed(1)} MB</span>`;
+  $('#mp3Drop').classList.add('ok');if(!$('#titleIn').value)$('#titleIn').value=f.name.replace(/\.[^.]+$/,'');
+  softReset('เปลี่ยนไฟล์เพลง');updateGate()});
+bindDrop($('#styleDrop'),$('#styleIn'),async files=>{const imgs=files.filter(f=>f.type.startsWith('image/')).slice(0,6);if(!imgs.length)return;
+  S.style=[];for(const f of imgs){const r=await prepRef(f);S.style.push({name:f.name,...r,url:URL.createObjectURL(f)})}
+  S.styleHash=(await sha256(S.style.map(s=>s.b64).join('|'))).slice(0,16);
+  $('#styleThumbs').innerHTML=S.style.map(s=>`<img src="${s.url}" alt="">`).join('');
+  $('#styleDrop').classList.remove('req');$('#styleDrop').classList.add('ok');
+  const locked=LS.get('bible.'+S.styleHash,null);S.bible=locked;showBible(locked?'locked':null);
+  log(locked?`Style Guide ตรงกับชุดที่ล็อกไว้ (${S.styleHash}) → ใช้ Style Bible เดิม`:`โหลด Style Guide ${S.style.length} ภาพ (${S.styleHash}) — ยังไม่มี Style Bible`,locked?'g':'');
+  updateGate()});
+$('#lyricsIn').addEventListener('input',()=>{updateGate()});
+$('#lyricsIn').addEventListener('change',()=>softReset('แก้เนื้อเพลง'));
+$('#secIn').addEventListener('input',()=>{$('#secVal').textContent=$('#secIn').value;updateGate()});
+function softReset(why){if(!S.scenes.length)return;S.scenes=[];S.images={};S.clips={};S.sheet=null;S.guide='';S.edl='';
+  for(const k in stepState)delete stepState[k];renderSteps();renderScenes();refreshOutputs();log(`${why} → ล้าง Storyboard เดิม`,'w')}
+function gateProblems(){const p=[];
+  if(!S.style.length)p.push('ไม่มีภาพ Style Guide — ห้ามเริ่มงาน');
+  if(!S.mp3)p.push('ยังไม่มีไฟล์ mp3');
+  if(!$('#lyricsIn').value.trim())p.push('ยังไม่มีเนื้อเพลง');
+  if(!KEY)p.push('ยังไม่ได้ใส่ Gemini API Key');return p}
+function updateGate(){const p=gateProblems();const g=$('#gate');
+  if(S.dur)$('#shotEst').textContent=`จำนวนภาพโดยประมาณ: ${Math.round(S.dur/ +$('#secIn').value)} ภาพ (เพลง ${fmt(S.dur)})`;
+  g.className='gate'+(p.length?'':' ok');g.textContent=p.length?'⛔ '+p.join(' · '):'✅ พร้อมเริ่ม — Style Guide จะถูกใช้กับทุกภาพและทุกคลิป';
+  $('#runBtn').disabled=!!p.length||S.running}
+function assertStyleGuide(){if(!S.style.length)throw new Error('ไม่มี Style Guide — ระบบหยุดทำงานตามกฎ (ห้ามเริ่มงานหากไม่มี Style Guide)')}
+
+/* ================= STEP 1: style bible ================= */
+function showBible(state){$('#bibleTa').value=S.bible?JSON.stringify(S.bible,null,2):'';
+  const c=$('#bibleChip');c.className='chip '+(S.bible?'good':'');c.textContent=S.bible?(state==='locked'?`🔒 ล็อกแล้ว · ${S.styleHash}`:'สร้างแล้ว (ยังไม่ล็อก)'):'ยังไม่มี'}
+async function stepStyle(force){assertStyleGuide();
+  if(S.bible&&!force){step('style','done','ใช้ชุดที่ล็อกไว้');return}
+  step('style','run','กำลังวิเคราะห์…');log('วิเคราะห์ Style Guide…');
+  const bible=await geminiJSON([...styleParts(),{text:
+`You are the art director of a children's YouTube music channel. The attached images are the channel's OFFICIAL STYLE GUIDE.
+Extract a precise, reusable "Style Bible" so every future illustration matches EXACTLY (zero style drift).
+Return JSON only:
+{"style_name":"short name","medium":"e.g. flat 2D vector / soft 3D clay / watercolor","line_art":"outline color, weight, roundness",
+"shading":"flat / cel / soft gradient ...","texture":"...","palette":[{"hex":"#RRGGBB","use":"..."}],"lighting":"...",
+"proportions":"head-to-body ratio, eye style, etc","background_style":"...",
+"characters":[{"name":"...","species":"...","visual_description":"very specific: colors (hex), clothing, accessories, shape language, eye/mouth style"}],
+"do":["..."],"dont":["..."],"prompt_prefix":"one dense English paragraph to prepend to every image prompt to reproduce this exact style"}`}],0.2);
+  S.bible=bible;LS.set('bible.'+S.styleHash,bible);showBible('locked');step('style','done','ล็อกแล้ว');log('สร้าง Style Bible และล็อกไว้แล้ว','g')}
+$('#bibleSave').onclick=()=>{try{S.bible=JSON.parse($('#bibleTa').value);if(!S.styleHash)throw new Error('ยังไม่มี Style Guide');
+  LS.set('bible.'+S.styleHash,S.bible);showBible('locked');log('บันทึกและล็อก Style Bible แล้ว','g')}catch(e){alert('บันทึกไม่ได้: '+e.message)}};
+$('#bibleRedo').onclick=()=>guarded(()=>stepStyle(true));
+
+/* ================= STEP 2: storyboard ================= */
+async function stepStory(force){assertStyleGuide();
+  if(S.scenes.length&&!force){step('story','done',`${S.scenes.length} ฉาก`);return}
+  step('story','run','กำลังฟังเพลง…');
+  const n=Math.max(4,Math.round(S.dur/ +$('#secIn').value));log(`สร้าง Storyboard (${n} ฉาก, เพลงยาว ${S.dur.toFixed(1)}s)…`);
+  if(!S.mp3B64)S.mp3B64=await blobToB64(S.mp3);
+  const sb=await geminiJSON([{inlineData:{mimeType:S.mp3.type&&S.mp3.type.startsWith('audio')?S.mp3.type:'audio/mpeg',data:S.mp3B64}},{text:
+`You are a director & storyboard artist for a children's (age 2-7) YouTube music-video channel.
+Listen to the attached song audio (duration ${S.dur.toFixed(2)} s) and read the lyrics below. Create a shot-by-shot storyboard.
+
+SONG TITLE: ${$('#titleIn').value||'(untitled)'}
+LYRICS:
+${$('#lyricsIn').value}
+
+STYLE BIBLE (characters and world MUST come from here):
+${JSON.stringify(S.bible)}
+
+RULES
+- Exactly about ${n} shots (±2). Shots are contiguous and together cover 0.00 → ${S.dur.toFixed(2)} s with no gaps. Each shot 2.5–5 s.
+- Use the AUDIO to time shots: cut on lyric-line starts and musical beats; give intro/instrumental/outro their own shots.
+- Tell a clear visual story that follows the lyrics line by line; a child must understand the song from pictures alone.
+- Vary the camera: rotate shot sizes (wide / medium / close-up / extreme close-up / over-the-shoulder / bird's-eye / low angle). Never use the same shot size 3 times in a row. Add a gentle camera move per shot.
+- Keep recurring characters identical; only use characters defined in the Style Bible (you may add simple props and backgrounds in the same style).
+- Kid-safe, cheerful, no scary content, NO text/letters/subtitles inside images.
+- "lyric": the exact lyric words sung during the shot (original language), or "(ดนตรี)" if instrumental.
+- "dialogue": short spoken line in the song's language, or "" if none (most shots have none).
+- "sfx": concrete sound effects (e.g. "footsteps on grass, birds chirping"), English.
+- "image_prompt": English, detailed description of the FIRST FRAME still image: characters (by name + key look), pose, expression, setting, props, composition, shot size & angle. Do not describe art style (it is added automatically).
+- "video_prompt": English, what MOVES during the shot: character actions, environment motion, camera move. 1–3 sentences.
+
+Return JSON only:
+{"summary":"1-2 sentence story summary (Thai)","scenes":[{"start":0.0,"end":3.5,"section":"intro|verse|chorus|bridge|outro","lyric":"...","shot_size":"wide|medium|close-up|...","camera":"angle + movement, e.g. 'wide eye-level, slow push-in'","action":"what characters/elements do (Thai)","dialogue":"","sfx":"...","characters":["..."],"image_prompt":"...","video_prompt":"..."}]}`}],0.6);
+  if(!sb.scenes||!sb.scenes.length)throw new Error('Storyboard ว่างเปล่า');
+  S.storyMeta={summary:sb.summary||''};S.scenes=normalizeScenes(sb.scenes);S.images={};S.clips={};
+  LS.set('lastStory',{title:$('#titleIn').value,scenes:S.scenes});
+  renderScenes();step('story','done',`${S.scenes.length} ฉาก`);log(`Storyboard พร้อม: ${S.scenes.length} ฉาก — ${S.storyMeta.summary}`,'g')}
+function normalizeScenes(arr){const sc=arr.map(s=>({...s,start:+s.start||0,end:+s.end||0})).sort((a,b)=>a.start-b.start);
+  sc[0].start=0;for(let i=0;i<sc.length;i++){sc[i].id=i+1;sc[i].end=i<sc.length-1?sc[i+1].start:S.dur;
+    sc[i].start=+sc[i].start.toFixed(2);sc[i].end=+Math.max(sc[i].start+0.5,sc[i].end).toFixed(2)}
+  return sc.filter(s=>s.end-s.start>=0.3).map((s,i)=>({...s,id:i+1}))}
+$('#sbRedo').onclick=()=>guarded(async()=>{await stepStyle();await stepStory(true)});
+
+/* ================= STEP 3: images ================= */
+function imagePrompt(sc){const b=S.bible||{};
+  const chars=(b.characters||[]).filter(c=>!sc.characters||!sc.characters.length||sc.characters.some(n=>String(n).toLowerCase().includes(String(c.name).toLowerCase())||String(c.name).toLowerCase().includes(String(n).toLowerCase())));
+  return `STRICT STYLE LOCK: The first ${S.style.length} attached image(s) are this channel's official STYLE GUIDE. Reproduce their exact art style, character designs, proportions, line weight, shading, textures and color palette. Do NOT invent a new style, do NOT drift.
+${b.prompt_prefix||''}
+Palette: ${(b.palette||[]).map(p=>p.hex+' '+(p.use||'')).join(', ')}
+Characters in this shot: ${chars.map(c=>`${c.name}: ${c.visual_description}`).join(' | ')||'(see scene)'}
+Don't: ${(b.dont||[]).join('; ')}
+
+SCENE ${sc.id} — ${sc.shot_size||''}, camera: ${sc.camera||''}
+${sc.image_prompt||sc.action}
+
+Output: one 16:9 cinematic children's-cartoon illustration, kid-safe, clean composition with room for motion. Absolutely no text, letters, captions, logos or watermark.`}
+async function genImage(sc){const id=sc.id;let last='';
+  for(let a=0;a<=CFG.retry;a++){checkAbort();
+    const parts=[...styleParts()];
+    if(CFG.cont&&id>1&&S.images[id-1]&&S.images[id-1].b64)parts.push({text:'Previous scene (for continuity of characters & setting only):'},{inlineData:{mimeType:'image/jpeg',data:S.images[id-1].refB64||S.images[id-1].b64}});
+    parts.push({text:imagePrompt(sc)+(last?`\nPrevious attempt was rejected because: ${last}. Fix it.`:'')});
+    const res=await api(`models/${CFG.image}:generateContent`,{contents:[{role:'user',parts}],
+      generationConfig:{responseModalities:['IMAGE'],imageConfig:{aspectRatio:'16:9',imageSize:CFG.imgSize}}});
+    const ip=partsOf(res).find(p=>p.inlineData||p.inline_data);
+    if(!ip){last='no image returned';log(`ฉาก ${sid(id)}: โมเดลไม่ส่งภาพ (ครั้งที่ ${a+1})`,'w');continue}
+    const d=ip.inlineData||ip.inline_data;const mime=d.mimeType||d.mime_type||'image/png';const blob=b64ToBlob(d.data,mime);
+    const sz=await imgSize(blob);
+    if(sz.w<MIN_IMG.w||sz.h<MIN_IMG.h){last=`resolution ${sz.w}x${sz.h} below ${MIN_IMG.w}x${MIN_IMG.h}`;
+      log(`ฉาก ${sid(id)}: ได้ ${sz.w}×${sz.h} ต่ำกว่าเกณฑ์ ${MIN_IMG.w}×${MIN_IMG.h} → ปฏิเสธ (ไม่ upscale) — ตรวจว่าใช้ Nano Banana Pro + 2K/4K`,'e');continue}
+    let qa=null;
+    if(CFG.qa>0){qa=await qaImage(blob,sc).catch(e=>{log(`QA ฉาก ${sid(id)} ข้าม: ${e.message}`,'w');return null});
+      if(qa&&(qa.score<CFG.qa||qa.has_text)&&a<CFG.retry){last=`style score ${qa.score}/10; ${(qa.issues||[]).join('; ')}${qa.has_text?'; contains text':''}`;
+        log(`ฉาก ${sid(id)}: QA ${qa.score}/10 ต่ำกว่าเกณฑ์ → สร้างใหม่ (${(qa.issues||[]).slice(0,2).join(', ')})`,'w');continue}}
+    await setImage(id,blob,mime,sz,qa,d.data);log(`ฉาก ${sid(id)}: ✓ ${sz.w}×${sz.h}${qa?` · QA ${qa.score}/10`:''}`,'g');return true}
+  S.images[id]={err:last};updateSceneMedia(id);log(`ฉาก ${sid(id)}: ล้มเหลวหลังลอง ${CFG.retry+1} ครั้ง — ${last}`,'e');return false}
+async function setImage(id,blob,mime,sz,qa,b64){const old=S.images[id];if(old&&old.url)URL.revokeObjectURL(old.url);
+  const ref=await prepRef(new File([blob],'x',{type:mime}));
+  S.images[id]={blob,mime,url:URL.createObjectURL(blob),w:sz.w,h:sz.h,qa,b64,refB64:ref.b64};
+  updateSceneMedia(id);refreshOutputs()}
+async function qaImage(blob,sc){const r=await prepRef(new File([blob],'q',{type:blob.type}));
+  return geminiJSON([...styleParts(),{text:'Above: official STYLE GUIDE. Below: candidate illustration.'},{inlineData:{mimeType:r.mime,data:r.b64}},
+   {text:`Rate how exactly the candidate matches the STYLE GUIDE (art style, line, palette, character design) and the scene brief: "${sc.image_prompt}".
+Return JSON {"score":0-10,"has_text":true|false,"issues":["short issue"]}. Be strict: 10 = indistinguishable style.`}],0.1)}
+async function stepImages(){assertStyleGuide();const todo=S.scenes.filter(s=>!(S.images[s.id]&&S.images[s.id].blob));
+  if(!todo.length){step('images','done',`${S.scenes.length}/${S.scenes.length}`);return}
+  step('images','run',`0/${S.scenes.length}`);let done=S.scenes.length-todo.length;
+  const conc=CFG.cont?1:CFG.conc;
+  await pool(todo,conc,async sc=>{try{await genImage(sc)}catch(e){if(S.abort)throw e;S.images[sc.id]={err:e.message};updateSceneMedia(sc.id);log(`ฉาก ${sid(sc.id)}: ${e.message}`,'e')}
+    done=S.scenes.filter(s=>S.images[s.id]&&S.images[s.id].blob).length;step('images','run',`${done}/${S.scenes.length}`);prog(done/S.scenes.length)});
+  const miss=S.scenes.filter(s=>!(S.images[s.id]&&S.images[s.id].blob));
+  if(miss.length){step('images','err',`ขาด ${miss.length} ภาพ`);throw new Error(`สร้างภาพไม่สำเร็จ ${miss.length} ฉาก (${miss.map(s=>sid(s.id)).join(', ')}) — กดเริ่มอีกครั้งเพื่อลองเฉพาะฉากที่ขาด`)}
+  step('images','done',`${S.scenes.length}/${S.scenes.length}`)}
+
+/* ================= STEP 4: storyboard sheet ================= */
+function wrapText(ctx,text,maxW,maxLines){const words=String(text||'').split(/(\s+)/);const lines=[];let cur='';
+  const pushChars=w=>{for(const ch of w){if(ctx.measureText(cur+ch).width>maxW){lines.push(cur);cur=ch}else cur+=ch}};
+  for(const w of words){if(ctx.measureText(cur+w).width<=maxW)cur+=w;else if(ctx.measureText(w).width>maxW){pushChars(w)}else{lines.push(cur);cur=w.trimStart()}}
+  if(cur)lines.push(cur);if(lines.length>maxLines){lines.length=maxLines;lines[maxLines-1]=lines[maxLines-1].replace(/.{0,2}$/,'…')}return lines}
+async function stepSheet(){const n=S.scenes.length;step('sheet','run','');
+  try{await document.fonts.load('600 30px "IBM Plex Sans Thai"')}catch{}
+  const W=3840,P=28,cols=n<=12?4:n<=24?6:8,cw=(W-P*(cols+1))/cols,th=cw*9/16,fs=Math.round(cw/19),txtH=fs*1.45*5+16,head=210;
+  const rows=Math.ceil(n/cols);const H=Math.max(2160,Math.ceil(head+rows*(th+txtH+P)+P));
+  const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  x.fillStyle='#ffffff';x.fillRect(0,0,W,H);x.fillStyle='#181b22';x.font='700 72px "IBM Plex Sans Thai",sans-serif';x.textBaseline='top';
+  x.fillText(`STORYBOARD — ${$('#titleIn').value||'Untitled'}`,P,40);
+  x.font='400 34px "IBM Plex Sans Thai",sans-serif';x.fillStyle='#51545d';
+  x.fillText(`${n} shots · ${fmt(S.dur)} · ${(S.bible&&S.bible.style_name)||''} · ${S.storyMeta?S.storyMeta.summary:''}`.slice(0,180),P,128);
+  for(let i=0;i<n;i++){const sc=S.scenes[i],cx=P+(i%cols)*(cw+P),cy=head+Math.floor(i/cols)*(th+txtH+P);
+    x.fillStyle='#efefeb';x.fillRect(cx,cy,cw,th);const im=S.images[sc.id];
+    if(im&&im.blob){const bm=await createImageBitmap(im.blob);x.drawImage(bm,cx,cy,cw,th);bm.close()}
+    x.strokeStyle='#d0d0c9';x.lineWidth=2;x.strokeRect(cx,cy,cw,th);
+    x.fillStyle='#d9480f';x.fillRect(cx,cy,fs*2.6,fs*1.6);x.fillStyle='#fff';x.font=`700 ${fs}px "IBM Plex Sans Thai",sans-serif`;x.fillText(sid(sc.id),cx+fs*.5,cy+fs*.25);
+    let ty=cy+th+8;x.fillStyle='#181b22';x.font=`700 ${fs}px "IBM Plex Sans Thai",sans-serif`;
+    x.fillText(`${fmt(sc.start)}–${fmt(sc.end)} · ${(sc.shot_size||'').toUpperCase()}`,cx,ty);ty+=fs*1.45;
+    x.font=`600 ${fs}px "IBM Plex Sans Thai",sans-serif`;x.fillStyle='#d9480f';
+    for(const l of wrapText(x,`♪ ${sc.lyric||''}`,cw,1)){x.fillText(l,cx,ty);ty+=fs*1.45}
+    x.font=`400 ${fs}px "IBM Plex Sans Thai",sans-serif`;x.fillStyle='#51545d';
+    for(const l of wrapText(x,`🎥 ${sc.camera||''}  ▶ ${sc.action||''}`,cw,2)){x.fillText(l,cx,ty);ty+=fs*1.45}
+    for(const l of wrapText(x,`🔊 ${sc.sfx||''}${sc.dialogue?`  💬 "${sc.dialogue}"`:''}`,cw,1)){x.fillText(l,cx,ty);ty+=fs*1.45}}
+  const blob=await new Promise(r=>c.toBlob(r,'image/png'));
+  if(c.width<MIN_IMG.w||c.height<MIN_IMG.h)throw new Error('Storyboard sheet ต่ำกว่าเกณฑ์');
+  if(S.sheet)URL.revokeObjectURL(S.sheet.url);S.sheet={blob,url:URL.createObjectURL(blob),w:W,h:H};
+  $('#sheetPrev').src=S.sheet.url;$('#sheetPrev').style.display='block';step('sheet','done',`${W}×${H}`);log(`Storyboard sheet ${W}×${H}px`,'g');refreshOutputs()}
+
+/* ================= STEP 5: videos ================= */
+function videoPrompt(sc){const b=S.bible||{};
+  return `${sc.video_prompt||sc.action}
+Camera: ${sc.camera||'gentle movement'}.
+Animate the input image exactly as drawn: keep the identical ${b.style_name||'cartoon'} art style (${b.medium||''}, ${b.line_art||''}), identical character designs and colors. Smooth, cheerful, child-friendly motion.
+Audio: ${sc.sfx||'soft ambient sounds'}. ${sc.dialogue?`A character says: "${sc.dialogue}".`:'No speech.'} No music, no singing.`}
+async function genVideo(sc){const id=sc.id,im=S.images[id];if(!im||!im.blob)throw new Error('ยังไม่มีภาพของฉากนี้');
+  let b64=im.b64,mime=im.mime;if(im.blob.size>9e6){const bm=await createImageBitmap(im.blob);const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;
+    c.getContext('2d').drawImage(bm,0,0);bm.close();const jb=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));b64=await blobToB64(jb);mime='image/jpeg'}
+  for(let a=0;a<=CFG.retry;a++){checkAbort();
+    S.clips[id]={status:'สั่งสร้าง…'};updateSceneMedia(id);
+    const op=await api(`models/${CFG.video}:predictLongRunning`,{instances:[{prompt:videoPrompt(sc),image:{bytesBase64Encoded:b64,mimeType:mime}}],
+      parameters:{aspectRatio:'16:9',resolution:CFG.vidRes,durationSeconds:+CFG.vidDur,
+        negativePrompt:'style change, photorealistic, live action, text, subtitles, watermark, logo, deformed face, extra limbs, scary, dark horror'}});
+    let r=op,t0=Date.now();
+    while(!r.done){checkAbort();await sleep(10000);r=await api(r.name,null,{method:'GET'});
+      S.clips[id]={status:`กำลังเรนเดอร์ ${Math.round((Date.now()-t0)/1000)}s`};updateSceneMedia(id);
+      if(Date.now()-t0>15*60e3)throw new Error('Veo timeout 15 นาที')}
+    if(r.error)throw new Error('Veo: '+(r.error.message||JSON.stringify(r.error)));
+    const gv=r.response&&(r.response.generateVideoResponse||r.response);
+    const smp=gv&&(gv.generatedSamples||gv.generatedVideos||[])[0];const uri=smp&&smp.video&&smp.video.uri;
+    if(!uri){const why=gv&&gv.raiMediaFilteredReasons;log(`ฉาก ${sid(id)}: Veo ไม่ส่งวิดีโอ ${why?'('+why.join(', ')+')':''} → ลองใหม่`,'w');continue}
+    let blob=null;
+    for(const u of [uri+(uri.includes('?')?'&':'?')+'key='+encodeURIComponent(KEY),uri]){try{const resp=await fetch(u,u===uri?{headers:{'x-goog-api-key':KEY}}:{});if(resp.ok){blob=await resp.blob();break}}catch{}}
+    if(!blob){S.clips[id]={err:'ดาวน์โหลดอัตโนมัติไม่ได้ (CORS) — เปิดลิงก์แล้วอัปโหลดกลับ',link:uri};updateSceneMedia(id);log(`ฉาก ${sid(id)}: สร้างเสร็จแต่ดาวน์โหลดอัตโนมัติไม่ได้ — ใช้ปุ่มลิงก์ในฉาก`,'w');return false}
+    const ok=await acceptClip(id,new File([blob],`clip_${sid(id)}.mp4`,{type:'video/mp4'}),'veo');if(ok)return true}
+  if(!(S.clips[id]&&S.clips[id].blob)){S.clips[id]={err:'สร้างคลิปไม่สำเร็จ'};updateSceneMedia(id)}return false}
+async function acceptClip(id,file,src){let m;try{m=await videoMeta(file)}catch(e){log(`คลิปฉาก ${sid(id)}: ${e.message}`,'e');return false}
+  if(m.w<MIN_VID.w||m.h<MIN_VID.h){if(!(S.clips[id]&&S.clips[id].blob)){S.clips[id]={err:`${m.w}×${m.h} ต่ำกว่า ${MIN_VID.w}×${MIN_VID.h} — ปฏิเสธ`};updateSceneMedia(id)}
+    log(`คลิปฉาก ${sid(id)}: ${m.w}×${m.h} ต่ำกว่าเกณฑ์ → ปฏิเสธ (ห้าม upscale)`,'e');return false}
+  const old=S.clips[id];if(old&&old.url)URL.revokeObjectURL(old.url);
+  S.clips[id]={blob:file,url:URL.createObjectURL(file),w:m.w,h:m.h,dur:m.dur,src};updateSceneMedia(id);refreshOutputs();
+  log(`คลิปฉาก ${sid(id)}: ✓ ${m.w}×${m.h} · ${m.dur.toFixed(1)}s (${src})`,'g');return true}
+async function stepVideos(){assertStyleGuide();
+  if($('#modeIn').value==='flow'){const have=S.scenes.filter(s=>S.clips[s.id]&&S.clips[s.id].blob).length;
+    step('videos',have===S.scenes.length?'done':'skip',have===S.scenes.length?`${have}/${have}`:`โหมด Flow · มีแล้ว ${have}/${S.scenes.length}`);
+    if(have<S.scenes.length)log('โหมด Google Flow: ดาวน์โหลด “Flow Pack” → สร้างคลิปใน Flow → กด “อัปโหลดคลิปหลายไฟล์” แล้วกดเริ่ม Automation อีกครั้งเพื่ออัปเดต Editing Guide','w');return}
+  const todo=S.scenes.filter(s=>!(S.clips[s.id]&&S.clips[s.id].blob));
+  if(!todo.length){step('videos','done',`${S.scenes.length}/${S.scenes.length}`);return}
+  step('videos','run',`0/${S.scenes.length}`);
+  await pool(todo,CFG.conc,async sc=>{try{await genVideo(sc)}catch(e){if(S.abort)throw e;S.clips[sc.id]={err:e.message};updateSceneMedia(sc.id);log(`คลิปฉาก ${sid(sc.id)}: ${e.message}`,'e')}
+    const d=S.scenes.filter(s=>S.clips[s.id]&&S.clips[s.id].blob).length;step('videos','run',`${d}/${S.scenes.length}`);prog(d/S.scenes.length)});
+  const miss=S.scenes.filter(s=>!(S.clips[s.id]&&S.clips[s.id].blob));
+  step('videos',miss.length?'err':'done',miss.length?`ขาด ${miss.length} คลิป`:`${S.scenes.length}/${S.scenes.length}`);
+  if(miss.length)log(`คลิปที่ยังขาด: ${miss.map(s=>sid(s.id)).join(', ')} — กดเริ่มอีกครั้งเพื่อสร้างเฉพาะที่ขาด หรืออัปโหลดเอง`,'w')}
+
+/* ================= STEP 6: editing guide + EDL ================= */
+function buildGuide(){const fps=+CFG.fps,title=$('#titleIn').value||'Untitled',L=[];const line='='.repeat(78);
+  L.push(line,`EDITING GUIDE — ${title}`,line,
+    `ไฟล์เพลง        : ${S.mp3?S.mp3.name:'-'}  (ความยาว ${fmt(S.dur)})`,
+    `จำนวนคลิป       : ${S.scenes.length} คลิป`,
+    `Style           : ${(S.bible&&S.bible.style_name)||'-'}  [Style Guide ID ${S.styleHash}]`,
+    `เรื่องย่อ        : ${(S.storyMeta&&S.storyMeta.summary)||'-'}`,
+    `สร้างเมื่อ        : ${new Date().toLocaleString('th-TH')}`,'',
+    'การตั้งค่า DaVinci Resolve',
+    `  1) Timeline resolution 1920x1080 (หรือ 3840x2160 ถ้าคลิปเป็น 4K) · Frame rate ${fps} fps`,
+    '  2) ลากไฟล์เพลง mp3 ลง Audio Track A1 ที่ตำแหน่ง 01:00:00:00 (ต้นเพลง)',
+    '  3) วิธีเร็ว: File > Import > Timeline > timeline.edl แล้วชี้ไปที่โฟลเดอร์ clips/',
+    '     หรือวางคลิปเองตามตารางด้านล่าง (ใช้ช่วง "ตัดจากคลิป" เป็น In/Out ของคลิป)',
+    '  4) ปิดเสียงคลิป หรือลดเหลือประมาณ -18 dB ถ้าต้องการเก็บ SFX ไว้ใต้เพลง',
+    '  5) แนะนำ Cross Dissolve 6-8 เฟรมเฉพาะจุดเปลี่ยนท่อน (intro→verse→chorus) ที่เหลือใช้ Cut ตรงจังหวะ','',line);
+  for(const sc of S.scenes){const need=sc.end-sc.start,cl=S.clips[sc.id],cd=cl&&cl.dur;
+    const srcIn=0,srcOut=cd?Math.min(cd,need):need;
+    L.push(`CLIP ${sid(sc.id)}  |  ${fmt(sc.start)} - ${fmt(sc.end)}  (${need.toFixed(2)} วินาที)  |  ${(sc.section||'').toUpperCase()}`,
+      `  ไฟล์คลิป     : clip_${sid(sc.id)}.mp4   (ภาพต้นฉบับ scene_${sid(sc.id)}.png)`,
+      `  วางบน Timeline: ${tc(3600+sc.start,fps)} -> ${tc(3600+sc.end,fps)}  (Timeline เริ่ม 01:00:00:00 = ต้นเพลง)`,
+      `  ตัดจากคลิป   : ${fmt(srcIn)} - ${fmt(srcOut)}${cd?`  (คลิปยาว ${cd.toFixed(2)}s)`:''}`,
+      `  เนื้อเพลง     : "${sc.lyric||''}"`,
+      `  Camera       : ${sc.shot_size||''} — ${sc.camera||''}`,
+      `  Action       : ${sc.action||''}`,
+      `  Dialogue     : ${sc.dialogue||'(ไม่มี)'}`,
+      `  SFX          : ${sc.sfx||'-'}`);
+    if(cd&&cd+0.01<need)L.push(`  ⚠ คลิปสั้นกว่าช่วงที่ต้องใช้ ${(need-cd).toFixed(2)}s → ใช้ Retime (Speed ~${Math.round(cd/need*100)}%) หรือ Freeze Frame ท้ายคลิป`);
+    L.push('-'.repeat(78))}
+  L.push('','ตรวจสอบก่อน Export: ความละเอียด Timeline ≥ 1920x1080 · ห้ามใช้ Super Scale/Upscale กับคลิป · ตั้งค่า YouTube "Made for Kids"');
+  return L.join('\r\n')}
+function buildEDL(){const fps=+CFG.fps,H=3600,L=[`TITLE: ${($('#titleIn').value||'Untitled').replace(/[^\x20-\x7E]/g,'_')}`,'FCM: NON-DROP FRAME',''];
+  S.scenes.forEach((sc,i)=>{const rIn=Math.round(sc.start*fps),rOut=Math.round(sc.end*fps),len=rOut-rIn;
+    const cl=S.clips[sc.id];const max=cl&&cl.dur?Math.floor(cl.dur*fps):len;const sOut=Math.min(len,max);
+    L.push(`${String(i+1).padStart(3,'0')}  AX       V     C        ${tc(0,fps)} ${tc(sOut/fps,fps)} ${tc(H+rIn/fps,fps)} ${tc(H+(rIn+sOut)/fps,fps)}`,
+      `* FROM CLIP NAME: clip_${sid(sc.id)}.mp4`,'')});
+  return L.join('\r\n')}
+function buildFlowPrompts(){const L=['GOOGLE FLOW — PROMPT PACK',`เพลง: ${$('#titleIn').value}`,
+  'วิธีใช้: Flow > New project > Frames to Video > อัปโหลด scene_XX.png เป็น First frame > วาง Prompt > Aspect 16:9 > ดาวน์โหลดแบบ 1080p (ห้าม Upscale)',
+  'ตั้งชื่อไฟล์ที่ดาวน์โหลดเป็น clip_XX.mp4 ให้ตรงหมายเลขฉาก แล้วอัปโหลดกลับเข้าแอป',''];
+  for(const sc of S.scenes)L.push(`=== CLIP ${sid(sc.id)}  (${fmt(sc.start)}-${fmt(sc.end)}, ต้องใช้ ${(sc.end-sc.start).toFixed(1)}s) ===`,`First frame: images/scene_${sid(sc.id)}.png`,'Prompt:',videoPrompt(sc),'');
+  return L.join('\r\n')}
+function stepGuide(){S.guide=buildGuide();S.edl=buildEDL();$('#guidePrev').value=S.guide;step('guide','done','txt + edl');refreshOutputs();log('สร้าง Editing Guide และ EDL แล้ว','g')}
+
+/* ================= orchestration ================= */
+async function guarded(fn){if(S.running)return;S.running=true;S.abort=false;$('#stopBtn').disabled=false;updateGate();
+  try{await fn()}catch(e){log('หยุด: '+e.message,'e');for(const k in stepState)if(stepState[k].c==='run')step(k,'err',stepState[k].t)}
+  finally{S.running=false;$('#stopBtn').disabled=true;updateGate();refreshOutputs()}}
+$('#runBtn').onclick=()=>{const p=gateProblems();if(p.length){alert(p.join('\n'));return}
+  guarded(async()=>{assertStyleGuide();log('▶ เริ่ม Automation','g');
+    await stepStyle();await stepStory();await stepImages();await stepSheet();await stepVideos();stepGuide();prog(1);
+    const allClips=S.scenes.every(s=>S.clips[s.id]&&S.clips[s.id].blob);
+    log(allClips?'🎉 เสร็จสมบูรณ์ — ดาวน์โหลด ZIP แล้วนำเข้า DaVinci Resolve ได้เลย':'✔ ภาพ + Storyboard + Guide พร้อม — รอคลิปวิดีโอ (ดูขั้นตอนในบันทึกด้านบน)','g')})};
+$('#stopBtn').onclick=()=>{S.abort=true;log('กำลังหยุด…','w')};
+$('#resetBtn').onclick=()=>{if(S.running||!confirm('ล้างเพลงปัจจุบันเพื่อเริ่มเพลงใหม่? (Style Guide และ Style Bible ยังอยู่)'))return;
+  S.mp3=null;S.mp3B64=null;S.dur=0;$('#player').style.display='none';$('#mp3Drop').classList.remove('ok');
+  $('#mp3Info').innerHTML='<b>เลือก / ลากไฟล์ mp3 มาวาง</b><br><span class="small">ความยาวแนะนำ 1–2 นาที</span>';
+  $('#lyricsIn').value='';$('#titleIn').value='';$('#sheetPrev').style.display='none';$('#guidePrev').value='';
+  S.scenes=[];S.images={};S.clips={};S.sheet=null;S.guide='';S.edl='';for(const k in stepState)delete stepState[k];
+  renderSteps();renderScenes();refreshOutputs();prog(0);updateGate()};
+
+/* ================= scene UI ================= */
+const FIELDS=[['lyric','เนื้อเพลง'],['camera','Camera'],['action','Action'],['dialogue','Dialogue'],['sfx','SFX']];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function renderScenes(){const box=$('#scenes');$('#sbChip').textContent=`${S.scenes.length} ฉาก`;
+  if(!S.scenes.length){box.innerHTML='<div class="muted small">ยังไม่มี Storyboard</div>';return}
+  box.innerHTML=S.scenes.map(sc=>`<div class="scene" data-id="${sc.id}">
+   <div class="media"><div class="frame" data-m="img"></div><div class="frame" data-m="vid"></div><div class="meta" data-m="meta"></div>
+    <div class="row"><button class="btn sm" data-a="img">↻ ภาพ</button><button class="btn sm" data-a="vid">↻ คลิป</button>
+    <label class="btn sm">⤒ คลิป<input type="file" accept="video/*" data-a="up" style="display:none"></label></div></div>
+   <div><div class="hd"><span class="no">#${sid(sc.id)}</span>
+     <input type="number" step="0.01" data-k="start" value="${sc.start}" aria-label="start"> –
+     <input type="number" step="0.01" data-k="end" value="${sc.end}" aria-label="end">
+     <span class="chip">${esc(sc.section||'')}</span><span class="chip">${esc(sc.shot_size||'')}</span></div>
+    <div class="fields">${FIELDS.map(([k,l])=>`<div><label>${l}</label><textarea data-k="${k}">${esc(sc[k])}</textarea></div>`).join('')}</div>
+    <details><summary>Prompt ภาพ / วิดีโอ (อังกฤษ)</summary><div class="fields" style="margin-top:6px">
+     <div><label>Image prompt</label><textarea data-k="image_prompt" rows="4">${esc(sc.image_prompt)}</textarea></div>
+     <div><label>Video prompt</label><textarea data-k="video_prompt" rows="4">${esc(sc.video_prompt)}</textarea></div></div></details></div></div>`).join('');
+  S.scenes.forEach(s=>updateSceneMedia(s.id))}
+function updateSceneMedia(id){const el=document.querySelector(`.scene[data-id="${id}"]`);if(!el)return;
+  const im=S.images[id],cl=S.clips[id];const fi=el.querySelector('[data-m=img]'),fv=el.querySelector('[data-m=vid]');
+  fi.innerHTML=im&&im.url?`<img src="${im.url}" alt="scene ${id}" loading="lazy">`:`<span>${im&&im.err?'⚠ '+esc(im.err):'ภาพ: รอสร้าง'}</span>`;
+  fv.innerHTML=cl&&cl.url?`<video src="${cl.url}" controls muted playsinline preload="metadata"></video>`:
+    `<span>${cl&&cl.status?esc(cl.status):cl&&cl.err?'⚠ '+esc(cl.err):'คลิป: รอสร้าง'}${cl&&cl.link?`<br><a href="${esc(cl.link+(cl.link.includes('?')?'&':'?')+'key='+encodeURIComponent(KEY))}" target="_blank" rel="noopener">เปิดคลิป</a>`:''}</span>`;
+  el.querySelector('[data-m=meta]').textContent=[im&&im.w?`ภาพ ${im.w}×${im.h}${im.qa?` · QA ${im.qa.score}/10`:''}`:'',cl&&cl.w?`คลิป ${cl.w}×${cl.h} · ${cl.dur.toFixed(1)}s`:''].filter(Boolean).join(' | ')}
+$('#scenes').addEventListener('input',e=>{const t=e.target,k=t.dataset.k;if(!k)return;const id=+t.closest('.scene').dataset.id;
+  const sc=S.scenes.find(s=>s.id===id);sc[k]=(k==='start'||k==='end')?+t.value:t.value;LS.set('lastStory',{title:$('#titleIn').value,scenes:S.scenes});
+  if(S.guide){S.guide=buildGuide();S.edl=buildEDL();$('#guidePrev').value=S.guide}});
+$('#scenes').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const id=+b.closest('.scene').dataset.id;const sc=S.scenes.find(s=>s.id===id);
+  if(b.dataset.a==='img')guarded(async()=>{assertStyleGuide();delete S.images[id];updateSceneMedia(id);await genImage(sc)});
+  if(b.dataset.a==='vid')guarded(async()=>{assertStyleGuide();await genVideo(sc)})});
+$('#scenes').addEventListener('change',async e=>{const t=e.target;if(t.dataset.a!=='up'||!t.files[0])return;const id=+t.closest('.scene').dataset.id;
+  await acceptClip(id,t.files[0],'upload');if(S.guide)stepGuide()});
+$('#bulkClips').addEventListener('change',async e=>{const files=[...e.target.files].sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+  if(!S.scenes.length){alert('ยังไม่มี Storyboard');return}let i=0;
+  for(const f of files){const m=f.name.replace(/\.[^.]+$/,'').match(/(\d+)(?!.*\d)/);let id=m?+m[1]:null;if(!id||!S.scenes.find(s=>s.id===id))id=S.scenes[i]&&S.scenes[i].id;i++;if(id)await acceptClip(id,f,'flow')}
+  e.target.value='';const have=S.scenes.filter(s=>S.clips[s.id]&&S.clips[s.id].blob).length;if(have===S.scenes.length)step('videos','done',`${have}/${have}`);stepGuide()});
+
+/* ================= outputs ================= */
+function refreshOutputs(){const hasImg=S.scenes.some(s=>S.images[s.id]&&S.images[s.id].blob);
+  $('#dlZip').disabled=!S.scenes.length;$('#dlGuide').disabled=!S.guide;$('#dlEdl').disabled=!S.edl;$('#dlSheet').disabled=!S.sheet;$('#dlFlow').disabled=!hasImg}
+const txtBlob=s=>new Blob(['﻿'+s],{type:'text/plain;charset=utf-8'});
+function addCommon(z){const im=z.folder('images');
+  for(const sc of S.scenes){const i=S.images[sc.id];if(i&&i.blob)im.file(`scene_${sid(sc.id)}.${i.mime.includes('jpeg')?'jpg':'png'}`,i.blob)}
+  if(S.sheet)z.file('storyboard.png',S.sheet.blob);
+  z.file('storyboard.json',JSON.stringify({title:$('#titleIn').value,duration:S.dur,styleGuideId:S.styleHash,summary:S.storyMeta&&S.storyMeta.summary,scenes:S.scenes},null,2));
+  z.file('flow_prompts.txt',txtBlob(buildFlowPrompts()))}
+$('#dlZip').onclick=async()=>{const z=new JSZip();addCommon(z);const cf=z.folder('clips');
+  for(const sc of S.scenes){const c=S.clips[sc.id];if(c&&c.blob)cf.file(`clip_${sid(sc.id)}.mp4`,c.blob)}
+  z.file('editing_guide.txt',txtBlob(S.guide||buildGuide()));z.file('timeline.edl',S.edl||buildEDL());
+  z.file('style_bible.json',JSON.stringify(S.bible,null,2));if(S.mp3)z.file('audio/'+S.mp3.name,S.mp3);
+  S.style.forEach((s,i)=>z.file(`style_guide/${i+1}_${s.name}`,b64ToBlob(s.b64,s.mime)));
+  log('กำลังบีบอัด ZIP…');download(await z.generateAsync({type:'blob'}),`${slug()}_MV_project.zip`);log('ดาวน์โหลด ZIP แล้ว','g')};
+$('#dlFlow').onclick=async()=>{const z=new JSZip();addCommon(z);download(await z.generateAsync({type:'blob'}),`${slug()}_FlowPack.zip`)};
+$('#dlGuide').onclick=()=>download(txtBlob(S.guide),`${slug()}_editing_guide.txt`);
+$('#dlEdl').onclick=()=>download(new Blob([S.edl],{type:'text/plain'}),`${slug()}_timeline.edl`);
+$('#dlSheet').onclick=()=>download(S.sheet.blob,`${slug()}_storyboard.png`);
+
+/* ================= settings dialog ================= */
+const dlg=$('#settings');
+function openSettings(){$('#keyIn').value=KEY;$('#mText').value=CFG.text;$('#mImage').value=CFG.image;$('#mVideo').value=CFG.video;
+  $('#imgSize').value=CFG.imgSize;$('#vidRes').value=CFG.vidRes;$('#vidDur').value=CFG.vidDur;$('#fpsIn').value=CFG.fps;
+  $('#concIn').value=CFG.conc;$('#qaIn').value=CFG.qa;$('#retryIn').value=CFG.retry;$('#contIn').checked=CFG.cont;dlg.showModal()}
+$('#settingsBtn').onclick=openSettings;
+$('#setSave').onclick=()=>{KEY=$('#keyIn').value.trim();if($('#keyRemember').checked)LS.set('key',KEY);else LS.del('key');
+  CFG={text:$('#mText').value.trim()||DEF.text,image:$('#mImage').value.trim()||DEF.image,video:$('#mVideo').value.trim()||DEF.video,
+    imgSize:$('#imgSize').value,vidRes:$('#vidRes').value,vidDur:$('#vidDur').value,fps:$('#fpsIn').value,
+    conc:Math.max(1,Math.min(6,+$('#concIn').value||2)),qa:Math.max(0,Math.min(10,+$('#qaIn').value)),retry:Math.max(0,Math.min(5,+$('#retryIn').value)),cont:$('#contIn').checked};
+  LS.set('cfg',CFG);dlg.close();updateGate();if(S.guide)stepGuide()};
+dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+
+updateGate();refreshOutputs();
+if(!KEY)setTimeout(openSettings,400);
+</script>
+</body>
+</html>
