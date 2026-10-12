@@ -134,6 +134,9 @@ ol.howto li{margin:3px 0}
 .cost div b{display:block;color:var(--ink);font-size:.9rem}
 .cost div .free{color:var(--good-text);font-weight:700}
 select.sm{padding:4px 6px;font-size:.8rem;width:auto}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;font-size:.9rem;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s;z-index:1000;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%)}
+#promptDlg textarea{min-height:260px}
 </style>
 </head>
 <body>
@@ -266,6 +269,15 @@ select.sm{padding:4px 6px;font-size:.8rem;width:auto}
 </section>
 </div>
 
+<dialog id="promptDlg">
+  <h2 style="margin:0 0 6px" id="promptTitle">Prompt</h2>
+  <p class="small" id="promptStatus" style="margin:0 0 10px"></p>
+  <textarea id="promptText" class="code" readonly></textarea>
+  <div class="row" style="justify-content:flex-end;margin-top:10px">
+    <button class="btn" id="promptCopy">📋 คัดลอกอีกครั้ง</button><button class="btn primary" id="promptClose">ปิด</button></div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
 <dialog id="settings">
   <h2 style="margin:0 0 12px">⚙️ ตั้งค่า</h2>
   <div class="grid g2">
@@ -312,8 +324,18 @@ function tc(t,fps){const f=Math.round(t*fps);const fr=f%fps,s=Math.floor(f/fps)%
 function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
 function slug(){return ($('#titleIn').value.trim()||'kids-song').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,'_').slice(0,60)}
-async function copy(text,label){try{await navigator.clipboard.writeText(text)}catch{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}
-  log(`คัดลอก${label?' '+label:''} แล้ว`,'g')}
+let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800)}
+async function writeClip(text){try{await navigator.clipboard.writeText(text);return true}catch{}
+  try{const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();return ok}catch{return false}}
+/* copy to clipboard AND show the text, so the user always sees what was copied (and can copy by hand if the browser blocks it) */
+async function copy(text,label){const ok=await writeClip(text);
+  $('#promptTitle').textContent=label||'Prompt';$('#promptText').value=text;
+  $('#promptStatus').innerHTML=ok?'<span class="chip good">✓ คัดลอกแล้ว</span> ไปที่ Gemini / Flow แล้วกด Ctrl+V (มือถือ: กดค้างแล้ววาง)':'<span class="chip warn">เบราว์เซอร์ไม่อนุญาตให้คัดลอกอัตโนมัติ</span> กด Ctrl+A แล้ว Ctrl+C ในกล่องด้านล่าง';
+  const d=$('#promptDlg');if(!d.open)d.showModal();$('#promptText').focus();$('#promptText').select();
+  toast(ok?`✓ คัดลอก ${label||'Prompt'} แล้ว`:'คัดลอกอัตโนมัติไม่ได้ — คัดลอกจากกล่องข้อความ');log(`${ok?'คัดลอก':'แสดง'} ${label||'Prompt'}`,'g')}
+$('#promptClose').onclick=()=>$('#promptDlg').close();
+$('#promptCopy').onclick=()=>copy($('#promptText').value,$('#promptTitle').textContent);
+$('#promptDlg').addEventListener('click',e=>{if(e.target===$('#promptDlg'))$('#promptDlg').close()});
 function numFromName(n){const m=n.replace(/\.[^.]+$/,'').match(/(\d+)(?!.*\d)/);return m?+m[1]:null}
 
 /* ================= inputs ================= */
@@ -398,16 +420,16 @@ ${b.prompt_prefix||''}
 ${(b.palette||[]).length?`Palette: ${(b.palette||[]).map(p=>p.hex).join(', ')}`:''}
 ${charsFor(sc).map(c=>`${c.name}: ${c.visual_description}`).join('\n')}
 
-Scene ${sid(sc.id)} — ${sc.shot_size||''}${sc.camera?`, ${sc.camera}`:''}
+Scene ${sid(sc.id)}${[sc.shot_size,sc.camera].filter(Boolean).length?' — '+[sc.shot_size,sc.camera].filter(Boolean).join(', '):''}
 ${sc.image_prompt||sc.action}
 
-Wide 16:9 landscape, highest resolution available. Kid-safe children's cartoon. No text, letters, captions, logos or watermark.`.replace(/\n{3,}/g,'\n\n')}
+Wide 16:9 landscape, highest resolution available. Kid-safe children's cartoon. No text, letters, captions, logos or watermark.`.split('\n').map(l=>l.trim()).join('\n').replace(/\n{3,}/g,'\n\n')}
 function videoPrompt(sc){const b=S.bible||{};
   return `${sc.video_prompt||sc.action}
 Camera: ${sc.camera||'gentle movement'}.
 Keep the identical ${b.style_name||'cartoon'} art style and character designs of the input image. Smooth, cheerful, child-friendly motion.
 Sound: ${sc.sfx||'soft ambience'}. ${sc.dialogue?`A character says: "${sc.dialogue}".`:'No speech.'} No music.`}
-$('#copyAllImg').onclick=()=>{if(!S.scenes.length)return;copy(S.scenes.map(sc=>`===== scene_${sid(sc.id)} =====\n${imagePrompt(sc)}`).join('\n\n'),'Prompt ภาพทุกฉาก')};
+$('#copyAllImg').onclick=()=>{if(!S.scenes.length){alert('ยังไม่มี Storyboard — ทำขั้นที่ 2 (นำเข้า Storyboard) ก่อน');return}copy(S.scenes.map(sc=>`===== scene_${sid(sc.id)} =====\n${imagePrompt(sc)}`).join('\n\n'),'Prompt ภาพทุกฉาก')};
 
 /* ================= images ================= */
 async function acceptImage(id,file){let sz;try{sz=await imgSize(file)}catch{log(`ภาพฉาก ${sid(id)}: เปิดไฟล์ไม่ได้`,'e');return false}
