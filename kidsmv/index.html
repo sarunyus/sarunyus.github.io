@@ -145,6 +145,7 @@ select.sm{padding:4px 6px;font-size:.8rem;width:auto}
   <h1>🎵 Kids MV <span class="en">Studio</span> <span class="chip good" style="vertical-align:4px">ไม่ใช้ API · ไม่มีค่าใช้จ่ายรายครั้ง</span></h1>
   <div class="sub">แอปเป็นผู้ช่วยฝ่ายผลิต: เขียน Prompt ให้, ตรวจไฟล์, สร้างคลิปเคลื่อนไหวในเครื่องฟรี, ทำ Storyboard + Editing Guide + EDL ให้ — งาน AI ไปทำในแอป Gemini / Flow ที่คุณมีอยู่</div>
   <button class="btn sm" id="themeBtn" title="สลับธีม">◐ ธีม</button>
+  <span class="chip" id="saveChip" title="งานถูกบันทึกในเบราว์เซอร์นี้อัตโนมัติ">💾 —</span>
   <button class="btn sm" id="settingsBtn">⚙️ ตั้งค่า</button>
 </header>
 
@@ -190,7 +191,9 @@ select.sm{padding:4px 6px;font-size:.8rem;width:auto}
   <label class="f" for="lyricsIn" style="margin-top:14px">③ เนื้อเพลง (Lyrics)</label>
   <textarea id="lyricsIn" rows="7" placeholder="วางเนื้อเพลงที่นี่ (ใส่ [Verse] / [Chorus] ได้)"></textarea>
   <div id="gate" class="gate">—</div>
-  <div class="row" style="margin-top:12px"><button class="btn" id="resetBtn">↺ เริ่มเพลงใหม่</button></div>
+  <div class="row" style="margin-top:12px"><button class="btn" id="resetBtn">↺ เริ่มเพลงใหม่</button>
+    <label class="btn">📂 เปิดไฟล์โปรเจกต์ (.zip)<input type="file" id="openZip" accept=".zip,application/zip" style="display:none"></label>
+    <span class="small muted">งานบันทึกอัตโนมัติในเบราว์เซอร์นี้ ปิดแล้วเปิดใหม่ทำต่อได้เลย · ย้ายเครื่อง: ดาวน์โหลด ZIP แล้วกด “เปิดไฟล์โปรเจกต์”</span></div>
 </section>
 
 <!-- ===== STORYBOARD via Gemini app ===== -->
@@ -342,24 +345,26 @@ function numFromName(n){const m=n.replace(/\.[^.]+$/,'').match(/(\d+)(?!.*\d)/);
 function bindDrop(drop,input,handler){['dragenter','dragover'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over')}));
   ['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over')}));
   drop.addEventListener('drop',ev=>handler([...ev.dataTransfer.files]));input.addEventListener('change',()=>handler([...input.files]))}
-bindDrop($('#mp3Drop'),$('#mp3In'),async files=>{const f=files.find(f=>/audio|\.mp3$/i.test(f.type+f.name));if(!f)return;
+bindDrop($('#mp3Drop'),$('#mp3In'),files=>{const f=files.find(f=>/audio|\.mp3$/i.test(f.type+f.name));if(f)loadMp3(f)});
+async function loadMp3(f){
   S.mp3=f;const p=$('#player');p.src=URL.createObjectURL(f);p.style.display='block';
   await new Promise(r=>{p.onloadedmetadata=r;p.onerror=r});S.dur=p.duration||0;
   $('#mp3Info').innerHTML=`<b>${esc(f.name)}</b><br><span class="small">${fmt(S.dur)} · ${(f.size/1e6).toFixed(1)} MB</span>`;
-  $('#mp3Drop').classList.add('ok');if(!$('#titleIn').value)$('#titleIn').value=f.name.replace(/\.[^.]+$/,'');updateGate()});
-bindDrop($('#styleDrop'),$('#styleIn'),async files=>{const imgs=files.filter(f=>f.type.startsWith('image/')).slice(0,6);if(!imgs.length)return;
+  $('#mp3Drop').classList.add('ok');if(!$('#titleIn').value)$('#titleIn').value=f.name.replace(/\.[^.]+$/,'');updateGate()}
+bindDrop($('#styleDrop'),$('#styleIn'),files=>loadStyle(files));
+async function loadStyle(files){const imgs=files.filter(f=>f.type.startsWith('image/')||/\.(png|jpe?g|webp)$/i.test(f.name)).slice(0,6);if(!imgs.length)return;
   S.style=imgs.map(f=>({name:f.name,file:f,url:URL.createObjectURL(f)}));
   const bufs=await Promise.all(imgs.map(f=>f.arrayBuffer()));const all=new Uint8Array(bufs.reduce((a,b)=>a+b.byteLength,0));let o=0;for(const b of bufs){all.set(new Uint8Array(b),o);o+=b.byteLength}
   S.styleHash=(await sha256(all)).slice(0,16);
   $('#styleThumbs').innerHTML=S.style.map(s=>`<img src="${s.url}" alt="">`).join('');
   $('#styleDrop').classList.remove('req');$('#styleDrop').classList.add('ok');
   S.bible=LS.get('bible.'+S.styleHash,null);showBible();
-  log(S.bible?`Style Guide ตรงกับชุดที่ล็อกไว้ (${S.styleHash}) → ใช้ Style Bible เดิม`:`โหลด Style Guide ${S.style.length} ภาพ — Gemini จะสร้าง Style Bible ให้ในขั้นที่ 2`,S.bible?'g':'');updateGate()});
+  log(S.bible?`Style Guide ตรงกับชุดที่ล็อกไว้ (${S.styleHash}) → ใช้ Style Bible เดิม`:`โหลด Style Guide ${S.style.length} ภาพ — Gemini จะสร้าง Style Bible ให้ในขั้นที่ 2`,S.bible?'g':'');updateGate()}
 ['input','change'].forEach(e=>$('#lyricsIn').addEventListener(e,updateGate));$('#titleIn').addEventListener('input',updateGate);
 $('#secIn').addEventListener('input',()=>{$('#secVal').textContent=$('#secIn').value;updateGate()});
 function gateProblems(){const p=[];if(!S.style.length)p.push('ไม่มีภาพ Style Guide — ห้ามเริ่มงาน');if(!S.mp3)p.push('ยังไม่มีไฟล์ mp3');
   if(!$('#lyricsIn').value.trim())p.push('ยังไม่มีเนื้อเพลง');return p}
-function updateGate(){const p=gateProblems(),g=$('#gate');
+function updateGate(){schedulePersist();const p=gateProblems(),g=$('#gate');
   if(S.dur)$('#shotEst').textContent=`จำนวนฉากโดยประมาณ: ${nShots()} ฉาก (เพลง ${fmt(S.dur)})`;
   g.className='gate'+(p.length?'':' ok');g.textContent=p.length?'⛔ '+p.join(' · '):'✅ พร้อม — ไปที่ขั้นที่ 2';
   $('#copyMaster').disabled=!!p.length;$('#masterTa').value=p.length?'':masterPrompt()}
@@ -410,7 +415,7 @@ function showBible(){$('#bibleTa').value=S.bible?JSON.stringify(S.bible,null,2):
   c.className='chip '+(S.bible?'good':'');c.textContent=S.bible?`🔒 Style Bible ล็อกแล้ว · ${S.bible.style_name||S.styleHash}`:'Style Bible: ยังไม่มี';updateGate()}
 $('#bibleSave').onclick=()=>{try{if(!S.styleHash)throw new Error('ยังไม่มี Style Guide');S.bible=JSON.parse($('#bibleTa').value);LS.set('bible.'+S.styleHash,S.bible);showBible();log('บันทึกและล็อก Style Bible แล้ว','g')}catch(e){alert('บันทึกไม่ได้: '+e.message)}};
 $('#bibleClear').onclick=()=>{if(!S.styleHash||!confirm('ล้าง Style Bible ของ Style Guide นี้?'))return;LS.del('bible.'+S.styleHash);S.bible=null;showBible()};
-function saveProject(){LS.set('project',{title:$('#titleIn').value,summary:S.summary,scenes:S.scenes})}
+function saveProject(){schedulePersist()}
 
 /* ================= prompts ================= */
 function charsFor(sc){const b=S.bible||{};return (b.characters||[]).filter(c=>!sc.characters||!sc.characters.length||sc.characters.some(n=>{n=String(n).toLowerCase();const m=String(c.name).toLowerCase();return n.includes(m)||m.includes(n)}))}
@@ -547,7 +552,7 @@ function buildEDL(){const fps=+CFG.fps,L=[`TITLE: ${($('#titleIn').value||'Untit
     const sOut=Math.min(len,cl&&cl.dur?Math.floor(cl.dur*fps+1e-6):len);
     L.push(`${String(i+1).padStart(3,'0')}  AX       V     C        ${tc(0,fps)} ${tc(sOut/fps,fps)} ${tc(3600+rIn/fps,fps)} ${tc(3600+(rIn+sOut)/fps,fps)}`,`* FROM CLIP NAME: clip_${sid(sc.id)}.mp4`,'')});
   return L.join('\r\n')}
-function rebuild(){if(!S.scenes.length){S.guide=S.edl='';}else{S.guide=buildGuide();S.edl=buildEDL()}$('#guidePrev').value=S.guide;counts();refreshOutputs()}
+function rebuild(){schedulePersist();if(!S.scenes.length){S.guide=S.edl='';}else{S.guide=buildGuide();S.edl=buildEDL()}$('#guidePrev').value=S.guide;counts();refreshOutputs()}
 
 /* ================= scene UI ================= */
 const FIELDS=[['lyric','เนื้อเพลง'],['camera','Camera'],['action','Action'],['dialogue','Dialogue'],['sfx','SFX']];
@@ -601,7 +606,8 @@ $('#dlZip').onclick=async()=>{if(typeof JSZip==='undefined'){alert('โหลด
   const z=new JSZip();for(const sc of S.scenes){const i=S.images[sc.id];if(i)z.file(`images/scene_${sid(sc.id)}.${ext(i.name)}`,i.blob);
     const c=S.clips[sc.id];if(c)z.file(`clips/clip_${sid(sc.id)}.mp4`,c.blob)}
   if(S.sheet)z.file('storyboard.png',S.sheet.blob);
-  z.file('storyboard.json',JSON.stringify({title:$('#titleIn').value,duration:S.dur,styleGuideId:S.styleHash,summary:S.summary,scenes:S.scenes},null,2));
+  z.file('storyboard.json',JSON.stringify({title:$('#titleIn').value,duration:S.dur,styleGuideId:S.styleHash,summary:S.summary,lyrics:$('#lyricsIn').value,secPerShot:$('#secIn').value,
+    clipSources:Object.fromEntries(Object.entries(S.clips).map(([k,c])=>[k,{src:c.src,m:c.m||null}])),scenes:S.scenes},null,2));
   z.file('editing_guide.txt',txtBlob(buildGuide()));z.file('timeline.edl',buildEDL());
   z.file('prompts_images.txt',txtBlob(S.scenes.map(sc=>`===== scene_${sid(sc.id)} =====\n${imagePrompt(sc)}`).join('\r\n\r\n')));
   z.file('prompts_flow_clips.txt',txtBlob(S.scenes.map(sc=>`===== clip_${sid(sc.id)} (first frame: scene_${sid(sc.id)}) =====\n${videoPrompt(sc)}`).join('\r\n\r\n')));
@@ -615,7 +621,7 @@ $('#resetBtn').onclick=()=>{if(!confirm('ล้างเพลงปัจจุ
   S.mp3=null;S.dur=0;$('#player').style.display='none';$('#mp3Drop').classList.remove('ok');
   $('#mp3Info').innerHTML='<b>เลือก / ลากไฟล์ mp3 มาวาง</b><br><span class="small">ความยาวแนะนำ 1–2 นาที</span>';
   $('#lyricsIn').value='';$('#titleIn').value='';$('#jsonIn').value='';$('#sheetPrev').style.display='none';
-  S.scenes=[];S.images={};S.clips={};S.sheet=null;S.summary='';LS.del('project');renderScenes();rebuild();updateGate()};
+  S.scenes=[];S.images={};S.clips={};S.sheet=null;S.summary='';renderScenes();rebuild();updateGate()};
 
 /* ================= settings ================= */
 const dlg=$('#settings');
@@ -625,7 +631,64 @@ $('#setSave').onclick=()=>{const fpsChanged=$('#fpsIn').value!==CFG.fps;CFG={fps
   if(fpsChanged&&Object.values(S.clips).some(c=>c.src==='motion'))log('เปลี่ยน FPS แล้ว — กด “เรนเดอร์คลิปทั้งหมด” ใหม่ให้คลิปตรงกับ Timeline','w');rebuild()};
 dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
 
+/* ================= save & resume (IndexedDB, this browser only) ================= */
+const DB={db:null,async open(){if(this.db)return this.db;this.db=await new Promise((res,rej)=>{const r=indexedDB.open('kmv',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});return this.db},
+  async tx(mode,fn){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction('kv',mode);const st=t.objectStore('kv');const r=fn(st);
+    t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})},
+  get(k){return this.tx('readonly',st=>st.get(k))},put(k,v){return this.tx('readwrite',st=>st.put(v,k))},del(k){return this.tx('readwrite',st=>st.delete(k))},
+  keys(){return this.tx('readonly',st=>st.getAllKeys())}};
+let restoring=true,persistT=null,persisting=Promise.resolve();const stored=new Map();
+function schedulePersist(){if(restoring)return;clearTimeout(persistT);persistT=setTimeout(()=>{persisting=persisting.then(persist).catch(e=>{
+  $('#saveChip').className='chip bad';$('#saveChip').textContent='💾 บันทึกไม่ได้';log('บันทึกอัตโนมัติไม่สำเร็จ: '+(e&&e.message||e),'e')})},700)}
+async function persist(){const want=new Map();
+  if(S.mp3)want.set('f:mp3',S.mp3);S.style.forEach((x,i)=>want.set('f:style:'+i,x.file));
+  for(const sc of S.scenes){const im=S.images[sc.id],cl=S.clips[sc.id];if(im)want.set('f:img:'+sc.id,im.blob);if(cl)want.set('f:clip:'+sc.id,cl.blob)}
+  for(const [k,b] of want)if(stored.get(k)!==b){await DB.put(k,{blob:b,name:b.name||k,type:b.type});stored.set(k,b)}
+  for(const k of [...stored.keys()])if(!want.has(k)){await DB.del(k);stored.delete(k)}
+  await DB.put('meta',{v:1,savedAt:Date.now(),title:$('#titleIn').value,lyrics:$('#lyricsIn').value,sec:$('#secIn').value,json:$('#jsonIn').value,
+    summary:S.summary,scenes:S.scenes,styleCount:S.style.length,clips:Object.fromEntries(Object.entries(S.clips).map(([k,c])=>[k,{src:c.src,m:c.m||null}]))});
+  $('#saveChip').className='chip good';$('#saveChip').textContent='💾 บันทึกแล้ว '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}
+const asFile=r=>r&&new File([r.blob],r.name&&!/^f:/.test(r.name)?r.name:'file',{type:r.type||r.blob.type});
+/* load a whole project into the page; get(key) returns a File or null */
+async function loadProject(meta,get){
+  const mp3=await get('mp3');if(mp3)await loadMp3(mp3);
+  const st=[];for(let i=0;i<(meta.styleCount||6);i++){const f=await get('style:'+i);if(f)st.push(f)}if(st.length)await loadStyle(st);
+  $('#titleIn').value=meta.title||$('#titleIn').value;$('#lyricsIn').value=meta.lyrics||'';if(meta.json!=null)$('#jsonIn').value=meta.json;
+  if(meta.sec){$('#secIn').value=meta.sec;$('#secVal').textContent=meta.sec}
+  S.summary=meta.summary||'';S.scenes=(meta.scenes||[]).map(x=>({motion:'auto',...x}));S.images={};S.clips={};renderScenes();
+  for(const sc of S.scenes){const f=await get('img:'+sc.id);if(f)await acceptImage(sc.id,f)}
+  for(const sc of S.scenes){const f=await get('clip:'+sc.id);if(!f)continue;const info=(meta.clips||{})[sc.id]||{src:'ai'};
+    if(info.src==='motion'){try{const m=await videoMeta(f);S.clips[sc.id]={blob:f,url:URL.createObjectURL(f),w:m.w,h:m.h,dur:m.dur,src:'motion',m:info.m||motionOf(sc)};updateSceneMedia(sc.id)}catch{}}
+    else await acceptClip(sc.id,f)}
+  if(S.scenes.length&&S.scenes.every(s=>S.images[s.id]))await buildSheet();updateGate();rebuild()}
+async function restore(){try{const meta=await DB.get('meta');if(!meta){return}
+    const get=async k=>{const r=await DB.get('f:'+k);if(r)stored.set('f:'+k,null);return asFile(r)};
+    await loadProject(meta,get);
+    /* remember which stored blob each key holds so unchanged files are not rewritten */
+    for(const k of [...stored.keys()]){const p=k.split(':');stored.set(k,p[1]==='mp3'?S.mp3:p[1]==='style'?(S.style[+p[2]]||{}).file:p[1]==='img'?(S.images[+p[2]]||{}).blob:(S.clips[+p[2]]||{}).blob)}
+    $('#saveChip').className='chip good';$('#saveChip').textContent='💾 กู้คืนงานแล้ว';
+    log(`กู้คืนงานที่บันทึกไว้เมื่อ ${new Date(meta.savedAt).toLocaleString('th-TH')} — ทำต่อได้เลย`,'g')}
+  catch(e){log('กู้คืนงานไม่สำเร็จ: '+(e&&e.message||e),'e')}}
+$('#openZip').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  if(typeof JSZip==='undefined'){alert('โหลดตัวอ่าน ZIP ไม่สำเร็จ — รีเฟรชหน้า');return}
+  if((S.scenes.length||S.mp3)&&!confirm('เปิดโปรเจกต์นี้แทนงานปัจจุบัน?'))return;
+  try{const z=await JSZip.loadAsync(f);const sb=z.file('storyboard.json');if(!sb)throw new Error('ไม่ใช่ไฟล์โปรเจกต์ของแอปนี้ (ไม่พบ storyboard.json)');
+    const j=JSON.parse(await sb.async('string'));const files=Object.values(z.files).filter(x=>!x.dir);
+    const toFile=async(x,type)=>new File([await x.async('blob')],x.name.split('/').pop(),{type});
+    const mime=n=>/\.png$/i.test(n)?'image/png':/\.jpe?g$/i.test(n)?'image/jpeg':/\.webp$/i.test(n)?'image/webp':'';
+    const styleFiles=files.filter(x=>x.name.startsWith('style_guide/')).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+    const get=async k=>{if(k==='mp3'){const x=files.find(x=>x.name.startsWith('audio/'));return x&&toFile(x,'audio/mpeg')}
+      const [t,n]=k.split(':');if(t==='style'){const x=styleFiles[+n];return x&&toFile(x,mime(x.name))}
+      if(t==='img'){const x=files.find(x=>new RegExp('^images/scene_0*'+n+'\\.').test(x.name));return x&&toFile(x,mime(x.name))}
+      if(t==='clip'){const x=files.find(x=>new RegExp('^clips/clip_0*'+n+'\\.').test(x.name));return x&&toFile(x,'video/mp4')}return null};
+    S.mp3=null;S.style=[];S.scenes=[];S.images={};S.clips={};S.sheet=null;
+    await loadProject({title:j.title,lyrics:j.lyrics||'',sec:j.secPerShot,summary:j.summary,scenes:j.scenes,styleCount:styleFiles.length,clips:j.clipSources||{}},get);
+    log(`เปิดโปรเจกต์ ${f.name} แล้ว`,'g')}catch(err){alert('เปิดไฟล์ไม่ได้: '+err.message);log(err.message,'e')}});
+$('#jsonIn').addEventListener('input',schedulePersist);
+
 updateGate();renderScenes();rebuild();
+restore().finally(()=>{restoring=false;schedulePersist()});
 </script>
 </body>
 </html>
