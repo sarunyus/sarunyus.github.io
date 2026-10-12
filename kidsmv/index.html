@@ -216,7 +216,7 @@ select.sm{padding:4px 6px;font-size:.8rem;width:auto}
 <!-- ===== SCENES ===== -->
 <section class="card">
   <h2><span class="num">ขั้นที่ 3</span>ภาพนิ่ง + คลิป ทีละฉาก</h2>
-  <p class="hint"><b>ภาพ:</b> กด “📋 Prompt ภาพ” → ไปสร้างใน Gemini หรือ Google Flow (แนบ Style Guide ทุกครั้ง) → ดาวน์โหลดขนาดใหญ่สุด → ตั้งชื่อ scene_01.png, scene_02.png … → อัปโหลดกลับทีเดียว · ภาพต้อง ≥ 2560×1440<br>
+  <p class="hint"><b>ภาพ:</b> กด “📋 Prompt ภาพ” → ไปสร้างใน <b>Google Flow</b> (โหมดสร้างภาพ + ใส่ Style Guide เป็น Ingredients) หรือ Gemini (กด <i>Tools › Create images 🍌</i> ก่อนวาง Prompt และแนบ Style Guide) → ดาวน์โหลดขนาดใหญ่สุด → ตั้งชื่อ scene_01.png, scene_02.png … → อัปโหลดกลับทีเดียว · ภาพต้อง ≥ 2560×1440<br>
   <b>คลิป:</b> กด “🎬 เรนเดอร์คลิปทั้งหมด” สร้างคลิปกล้องเคลื่อนไหว 1920×1080 ในเครื่องฟรี (ย่อภาพลงเท่านั้น ไม่ upscale) — ฉากไหนอยากได้ตัวละครขยับจริง ใช้ “📋 Prompt คลิป” ไปทำใน Flow แล้วอัปโหลดทับ</p>
   <div class="row" style="margin-bottom:10px">
     <span class="chip" id="sbChip">0 ฉาก</span><span class="chip" id="imgChip">ภาพ 0/0</span><span class="chip" id="clipChip">คลิป 0/0</span>
@@ -415,7 +415,8 @@ function saveProject(){LS.set('project',{title:$('#titleIn').value,summary:S.sum
 /* ================= prompts ================= */
 function charsFor(sc){const b=S.bible||{};return (b.characters||[]).filter(c=>!sc.characters||!sc.characters.length||sc.characters.some(n=>{n=String(n).toLowerCase();const m=String(c.name).toLowerCase();return n.includes(m)||m.includes(n)}))}
 function imagePrompt(sc){const b=S.bible||{};
-  return `Use the attached STYLE GUIDE image(s) as the strict style reference: same art style, character designs, proportions, line weight, shading, textures and colour palette. Do not invent a new style.
+  return `Generate an image now. Reply with the image only, no text description.
+Use the attached STYLE GUIDE image(s) as the strict style reference: same art style, character designs, proportions, line weight, shading, textures and colour palette. Do not invent a new style.
 ${b.prompt_prefix||''}
 ${(b.palette||[]).length?`Palette: ${(b.palette||[]).map(p=>p.hex).join(', ')}`:''}
 ${charsFor(sc).map(c=>`${c.name}: ${c.visual_description}`).join('\n')}
