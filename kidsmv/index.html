@@ -286,12 +286,14 @@ ol.howto li{margin:3px 0}
 const $=s=>document.querySelector(s);
 const API='https://generativelanguage.googleapis.com/v1beta/';
 const MIN_IMG={w:2560,h:1440}, MIN_VID={w:1920,h:1080};
-const DEF={text:'gemini-2.5-pro',image:'gemini-3-pro-image-preview',video:'veo-3.1-generate-preview',
+const DEF={text:'gemini-3.1-pro-preview',image:'gemini-3-pro-image-preview',video:'veo-3.1-generate-preview',
   imgSize:'2K',vidRes:'1080p',vidDur:'8',fps:'24',conc:2,qa:7,retry:2,cont:false};
 const LS={get(k,d){try{const v=localStorage.getItem('kmv.'+k);return v==null?d:JSON.parse(v)}catch{return d}},
   set(k,v){try{localStorage.setItem('kmv.'+k,JSON.stringify(v))}catch{}},
   del(k){try{localStorage.removeItem('kmv.'+k)}catch{}}};
 let CFG=Object.assign({},DEF,LS.get('cfg',{}));
+/* migrate models Google has retired for new users */
+if(/^gemini-2\.5-pro/.test(CFG.text)){CFG.text=DEF.text;LS.set('cfg',CFG)}
 let KEY=LS.get('key','')||'';
 const S={mp3:null,mp3B64:null,dur:0,style:[],styleHash:'',bible:null,storyMeta:null,scenes:[],
   images:{},clips:{},sheet:null,guide:'',edl:'',running:false,abort:false};
@@ -343,7 +345,7 @@ async function prepRef(file){const bm=await createImageBitmap(file);const max=20
   const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.92));return {mime:'image/jpeg',b64:await blobToB64(b)}}
 
 /* ================= Gemini API ================= */
-async function api(path,body,{method='POST',tries=5}={}){
+async function api(path,body,{method='POST',tries=5}={}){let swapped=false;
   if(!KEY)throw new Error('ยังไม่ได้ใส่ Gemini API Key (กด ⚙️ ตั้งค่า)');
   for(let a=0;a<tries;a++){checkAbort();
     let r;try{r=await fetch(API+path,{method,headers:{'Content-Type':'application/json','x-goog-api-key':KEY},body:body?JSON.stringify(body):undefined})}
@@ -352,6 +354,11 @@ async function api(path,body,{method='POST',tries=5}={}){
     const txt=await r.text();
     if([429,500,502,503,504].includes(r.status)&&a<tries-1){const w=Math.min(60000,4000*2**a);log(`API ${r.status} — รอ ${w/1000}s แล้วลองใหม่`,'w');await sleep(w);continue}
     let m=txt;try{m=JSON.parse(txt).error.message}catch{}
+    /* Google retired the model and named a replacement: switch to it, remember it, retry once */
+    const sug=m.match(/use (?:models\/)?((?:gemini|veo|imagen)-[a-z0-9.\-]*[a-z0-9])/i),cur=path.startsWith('models/')&&path.slice(7).split(':')[0];
+    if(!swapped&&cur&&sug&&sug[1]!==cur&&[400,404].includes(r.status)){swapped=true;
+      for(const k of ['text','image','video'])if(CFG[k]===cur)CFG[k]=sug[1];LS.set('cfg',CFG);
+      log(`โมเดล ${cur} ถูกยกเลิก → เปลี่ยนเป็น ${sug[1]} อัตโนมัติ (บันทึกในตั้งค่าแล้ว)`,'w');path=path.replace(cur,sug[1]);a--;continue}
     throw new Error(`API ${r.status}: ${m}`)}}
 function partsOf(res){const c=res.candidates&&res.candidates[0];
   if(!c){const br=res.promptFeedback&&res.promptFeedback.blockReason;throw new Error('โมเดลไม่ตอบ'+(br?` (${br})`:''))}
@@ -360,7 +367,7 @@ function parseJSON(t){t=t.trim().replace(/^```(?:json)?/i,'').replace(/```$/,'')
   try{return JSON.parse(t)}catch{const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));throw new Error('อ่าน JSON จากโมเดลไม่ได้')}}
 async function geminiJSON(parts,temp=0.4){
   const res=await api(`models/${CFG.text}:generateContent`,{contents:[{role:'user',parts}],
-    generationConfig:{temperature:temp,responseMimeType:'application/json'}});
+    generationConfig:Object.assign({responseMimeType:'application/json'},/^gemini-3/.test(CFG.text)?{}:{temperature:temp})});
   return parseJSON(partsOf(res).filter(p=>p.text&&!p.thought).map(p=>p.text).join(''))}
 const styleParts=()=>S.style.map(s=>({inlineData:{mimeType:s.mime,data:s.b64}}));
 
