@@ -219,8 +219,8 @@ select.sm{padding:4px 6px;font-size:.8rem;width:auto}
 <!-- ===== SCENES ===== -->
 <section class="card">
   <h2><span class="num">ขั้นที่ 3</span>ภาพนิ่ง + คลิป ทีละฉาก</h2>
-  <p class="hint"><b>ภาพ:</b> กด “📋 Prompt ภาพ” → ไปสร้างใน <b>Google Flow</b> (โหมดสร้างภาพ + ใส่ Style Guide เป็น Ingredients) หรือ Gemini (กด <i>Tools › Create images 🍌</i> ก่อนวาง Prompt และแนบ Style Guide) → ดาวน์โหลดขนาดใหญ่สุด → ตั้งชื่อ scene_01.png, scene_02.png … → อัปโหลดกลับทีเดียว · ภาพต้อง ≥ 2560×1440<br>
-  <b>คลิป:</b> กด “🎬 เรนเดอร์คลิปทั้งหมด” สร้างคลิปกล้องเคลื่อนไหว 1920×1080 ในเครื่องฟรี (ย่อภาพลงเท่านั้น ไม่ upscale) — ฉากไหนอยากได้ตัวละครขยับจริง ใช้ “📋 Prompt คลิป” ไปทำใน Flow แล้วอัปโหลดทับ</p>
+  <p class="hint"><b>ภาพ:</b> กด “📋 Prompt ภาพ” → ไปสร้างใน <b>Google Flow</b> (โหมดสร้างภาพ + ใส่ Style Guide เป็น Ingredients) หรือ Gemini (กด <i>Tools › Create images 🍌</i> ก่อนวาง Prompt และแนบ Style Guide) → ดาวน์โหลดขนาดใหญ่สุด → ตั้งชื่อ scene_01.png, scene_02.png … → อัปโหลดกลับทีเดียว · รับภาพได้ทุกขนาด (แนะนำ ≥ 1920×1080 เพื่อความคมชัด)<br>
+  <b>คลิป:</b> กด “🎬 เรนเดอร์คลิปทั้งหมด” สร้างคลิปกล้องเคลื่อนไหว 1920×1080 ในเครื่องฟรี (ภาพใหญ่กว่า 1080p จะถูกย่อลง ไม่ upscale) — ฉากไหนอยากได้ตัวละครขยับจริง ใช้ “📋 Prompt คลิป” ไปทำใน Flow แล้วอัปโหลดทับ</p>
   <div class="row" style="margin-bottom:10px">
     <span class="chip" id="sbChip">0 ฉาก</span><span class="chip" id="imgChip">ภาพ 0/0</span><span class="chip" id="clipChip">คลิป 0/0</span>
     <label class="btn sm primary">⤒ อัปโหลดภาพทั้งหมด<input type="file" id="bulkImgs" accept="image/*" multiple style="display:none"></label>
@@ -268,7 +268,7 @@ select.sm{padding:4px 6px;font-size:.8rem;width:auto}
     <li>File › Import › Timeline › เลือก timeline.edl → ชี้ไปที่โฟลเดอร์ clips</li>
     <li>ใส่ Title/End screen → Deliver → อัปโหลด YouTube ตั้งค่า “Made for Kids”</li>
   </ol>
-  <div class="note warn">ข้อควรรู้: แอปตรวจได้แค่ “จำนวนพิกเซล” ของไฟล์ ตรวจไม่ได้ว่าไฟล์ผ่านการ upscale มาจากเว็บต้นทางหรือไม่ — ตอนดาวน์โหลดจาก Gemini/Flow ให้เลือกขนาดต้นฉบับ (ไม่ใช่ตัวเลือก “Upscaled”) · คลิป 1080p ที่ดาวน์โหลดจาก Flow บางแพ็กเกจเป็นการ upscale จาก 720p ส่วนคลิปที่แอปเรนเดอร์เองเป็นการย่อจากภาพ 2K จึงไม่ upscale แน่นอน</div>
+  <div class="note warn">ข้อควรรู้: แอปตรวจได้แค่ “จำนวนพิกเซล” ของไฟล์ ตรวจไม่ได้ว่าไฟล์ผ่านการ upscale มาจากเว็บต้นทางหรือไม่ — ตอนดาวน์โหลดจาก Gemini/Flow ให้เลือกขนาดต้นฉบับ (ไม่ใช่ตัวเลือก “Upscaled”) · คลิป 1080p ที่ดาวน์โหลดจาก Flow บางแพ็กเกจเป็นการ upscale จาก 720p ส่วนคลิปที่แอปเรนเดอร์เองจะไม่ upscale เมื่อภาพใหญ่กว่า 1920×1080 (ภาพเล็กกว่านั้นจะถูกขยายให้เต็มจอ)</div>
 </section>
 </div>
 
@@ -295,7 +295,7 @@ select.sm{padding:4px 6px;font-size:.8rem;width:auto}
 <script>
 "use strict";
 const $=s=>document.querySelector(s);
-const MIN_IMG={w:2560,h:1440}, OUT={w:1920,h:1080};
+const OUT={w:1920,h:1080};
 const LS={get(k,d){try{const v=localStorage.getItem('kmv.'+k);return v==null?d:JSON.parse(v)}catch{return d}},
   set(k,v){try{localStorage.setItem('kmv.'+k,JSON.stringify(v))}catch{}},del(k){try{localStorage.removeItem('kmv.'+k)}catch{}}};
 /* this version never calls a paid API: forget any key/model settings from the old version */
@@ -439,7 +439,7 @@ $('#copyAllImg').onclick=()=>{if(!S.scenes.length){alert('ยังไม่ม�
 
 /* ================= images ================= */
 async function acceptImage(id,file){let sz;try{sz=await imgSize(file)}catch{log(`ภาพฉาก ${sid(id)}: เปิดไฟล์ไม่ได้`,'e');return false}
-  if(sz.w<MIN_IMG.w||sz.h<MIN_IMG.h){log(`ภาพฉาก ${sid(id)} (${file.name}): ${sz.w}×${sz.h} ต่ำกว่า ${MIN_IMG.w}×${MIN_IMG.h} → ปฏิเสธ (ห้าม upscale) — ดาวน์โหลดขนาดต้นฉบับที่ใหญ่กว่านี้`,'e');return false}
+  if(sz.w<OUT.w||sz.h<OUT.h)log(`ภาพฉาก ${sid(id)}: ${sz.w}×${sz.h} เล็กกว่า ${OUT.w}×${OUT.h} — รับไว้แล้ว แต่คลิปจะถูกขยายให้เต็ม 1080p จึงอาจคมน้อยลงเล็กน้อย`,'w');
   const r=sz.w/sz.h;if(Math.abs(r-16/9)>0.12)log(`ภาพฉาก ${sid(id)}: สัดส่วน ${r.toFixed(2)} ไม่ใช่ 16:9 — ระบบจะครอปกลางภาพให้`,'w');
   const old=S.images[id];if(old&&old.url)URL.revokeObjectURL(old.url);
   S.images[id]={blob:file,name:file.name,url:URL.createObjectURL(file),w:sz.w,h:sz.h};
@@ -485,12 +485,12 @@ function motionOf(sc){if(sc.motion&&sc.motion!=='auto')return sc.motion;const c=
   if(/push|zoom in|dolly in/.test(c))return 'in';if(/static/.test(c))return 'still';return ['in','right','out','left'][(sc.id-1)%4]}
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 /* crop window (in source px) at progress t; never smaller than the output, so pixels are only ever downscaled */
-function cropAt(m,t,W,H){const base=coverRect(W,H),zmax=Math.max(1,base.sw/OUT.w),amt=+CFG.zoom;
+function cropAt(m,t,W,H){const base=coverRect(W,H),amt=+CFG.zoom,zmax=base.sw>=OUT.w?Math.max(1,base.sw/OUT.w):1+amt*1.4;
   const z=k=>1+Math.min(zmax-1,amt*1.4)*k;const e=ease(t);let zoom=1,fx=.5,fy=.5;
   if(m==='in')zoom=z(e);else if(m==='out')zoom=z(1-e);else if(m==='still')zoom=z(e*.35);
   else{zoom=z(.8);if(m==='left')fx=1-e;if(m==='right')fx=e;if(m==='up')fy=1-e;if(m==='down')fy=e;
     if(m==='left'||m==='right')fx=.5+(fx-.5)*Math.min(1,amt*4);if(m==='up'||m==='down')fy=.5+(fy-.5)*Math.min(1,amt*4)}
-  const sw=Math.max(OUT.w,base.sw/zoom),sh=sw*9/16;return {sx:base.sx+(base.sw-sw)*fx,sy:base.sy+(base.sh-sh)*fy,sw,sh}}
+  const sw=Math.max(base.sw/zmax,base.sw/zoom),sh=sw*9/16;return {sx:base.sx+(base.sw-sw)*fx,sy:base.sy+(base.sh-sh)*fy,sw,sh}}
 let CODEC=null;
 async function pickCodec(){if(CODEC)return CODEC;if(typeof VideoEncoder==='undefined')throw new Error('เบราว์เซอร์นี้เรนเดอร์คลิปไม่ได้ — ใช้ Google Chrome หรือ Microsoft Edge เวอร์ชันล่าสุดบนคอมพิวเตอร์');
   if(typeof Mp4Muxer==='undefined')throw new Error('โหลดตัวสร้างไฟล์ mp4 ไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วรีเฟรชหน้า');
