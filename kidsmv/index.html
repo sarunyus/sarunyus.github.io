@@ -319,6 +319,7 @@ function blobToB64(b){return new Promise((res,rej)=>{const r=new FileReader();r.
 async function sha256(buf){const h=await crypto.subtle.digest('SHA-256',buf);return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function imgSize(blob){const bm=await createImageBitmap(blob);const r={w:bm.width,h:bm.height};bm.close();return r}
 function videoMeta(blob){return new Promise((res,rej)=>{const v=document.createElement('video');v.preload='metadata';v.muted=true;
+  setTimeout(()=>rej(new Error('เบราว์เซอร์เปิดไฟล์วิดีโอนี้ไม่ได้ (รูปแบบไฟล์ไม่รองรับ)')),20000);
   const u=URL.createObjectURL(blob);v.onloadedmetadata=()=>{res({w:v.videoWidth,h:v.videoHeight,dur:v.duration});URL.revokeObjectURL(u)};
   v.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('อ่านไฟล์วิดีโอไม่ได้'))};v.src=u})}
 function fmt(t){const m=Math.floor(t/60),s=t-m*60;return `${pad2(m)}:${s.toFixed(2).padStart(5,'0')}`}
@@ -339,7 +340,8 @@ async function copy(text,label){const ok=await writeClip(text);
 $('#promptClose').onclick=()=>$('#promptDlg').close();
 $('#promptCopy').onclick=()=>copy($('#promptText').value,$('#promptTitle').textContent);
 $('#promptDlg').addEventListener('click',e=>{if(e.target===$('#promptDlg'))$('#promptDlg').close()});
-function numFromName(n){const m=n.replace(/\.[^.]+$/,'').match(/(\d+)(?!.*\d)/);return m?+m[1]:null}
+/* scene number = first stand-alone 1-3 digit number ("#04_turtle_20261016.jpg" → 4, "clip_05.mp4" → 5); long timestamps are ignored */
+function numFromName(n){const m=n.replace(/\.[^.]+$/,'').match(/(?:^|\D)(\d{1,3})(?!\d)/);return m?+m[1]:null}
 
 /* ================= inputs ================= */
 function bindDrop(drop,input,handler){['dragenter','dragover'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over')}));
@@ -518,13 +520,18 @@ $('#renderAll').onclick=()=>busy(async()=>{assertStyleGuide();const todo=S.scene
   log(`เรนเดอร์เสร็จ ${k} คลิป (${OUT.w}×${OUT.h}, ${CODEC.mux==='avc'?'H.264':'VP9'})`,'g');rebuild()});
 
 /* ================= AI clips from Flow ================= */
-async function acceptClip(id,file){let m;try{m=await videoMeta(file)}catch(e){log(`คลิปฉาก ${sid(id)}: ${e.message}`,'e');return false}
-  if(m.w<OUT.w||m.h<OUT.h){log(`คลิปฉาก ${sid(id)}: ${m.w}×${m.h} ต่ำกว่า ${OUT.w}×${OUT.h} → ปฏิเสธ (ห้าม upscale)`,'e');return false}
+async function acceptClip(id,file){let m;try{m=await videoMeta(file)}catch(e){log(`คลิปฉาก ${sid(id)} (${file.name}): ${e.message}`,'e');toast(`⚠ คลิปฉาก ${sid(id)}: ${e.message}`);return false}
+  if(m.w<OUT.w||m.h<OUT.h)log(`คลิปฉาก ${sid(id)}: ${m.w}×${m.h} เล็กกว่า ${OUT.w}×${OUT.h} — รับไว้แล้ว (Resolve จะขยายให้เต็ม Timeline)`,'w');
   const old=S.clips[id];if(old&&old.url)URL.revokeObjectURL(old.url);
   S.clips[id]={blob:file,url:URL.createObjectURL(file),w:m.w,h:m.h,dur:m.dur,src:'ai'};updateSceneMedia(id);
-  log(`คลิป AI ฉาก ${sid(id)}: ✓ ${m.w}×${m.h} · ${m.dur.toFixed(1)}s`,'g');return true}
+  log(`คลิป AI ฉาก ${sid(id)}: ✓ ${m.w}×${m.h} · ${m.dur.toFixed(1)}s`,'g');toast(`✓ ใส่คลิป AI ฉาก ${sid(id)} แล้ว (${m.w}×${m.h})`);
+  const el=document.querySelector(`.scene[data-id="${id}"]`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});return true}
 $('#bulkClips').addEventListener('change',async e=>{const files=[...e.target.files];e.target.value='';if(!S.scenes.length){alert('ยังไม่มี Storyboard');return}
-  for(const f of files){const id=numFromName(f.name);if(!id||!S.scenes.find(s=>s.id===id)){log(`${f.name}: ตั้งชื่อไฟล์ให้มีเลขฉาก เช่น clip_05.mp4`,'e');continue}await acceptClip(id,f)}counts();rebuild()});
+  let ok=0;for(const f of files){let id=numFromName(f.name);
+    if(!id||!S.scenes.find(s=>s.id===id)){const ans=prompt(`ไฟล์ "${f.name}" เป็นคลิปของฉากที่เท่าไร? (1-${S.scenes.length})\nเคล็ดลับ: ตั้งชื่อไฟล์เป็น clip_05.mp4 แอปจะจับคู่ให้เอง`);id=ans&&+ans.replace(/\D/g,'');
+      if(!id||!S.scenes.find(s=>s.id===id)){log(`${f.name}: ข้าม — ไม่ทราบเลขฉาก`,'w');continue}}
+    if(await acceptClip(id,f))ok++}
+  toast(`ใส่คลิป AI ${ok}/${files.length} ไฟล์`);counts();rebuild()});
 
 /* ================= guide / edl ================= */
 function buildGuide(){const fps=+CFG.fps,L=[],line='='.repeat(78);
